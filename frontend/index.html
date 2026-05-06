@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能简历筛选工具</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <!-- 页面头部 -->
+    <header class="page-header">
+        <h1 class="page-title">智能简历筛选工具</h1>
+        <button class="btn btn-secondary" id="btn-config">API 配置</button>
+    </header>
+
+    <div class="container">
+        <!-- APIkey未配置警示通栏 -->
+        <div class="alert-banner hidden" id="alert-banner">
+            <span>⚠️ 请先完成APIkey配置，否则无法使用智能筛选功能</span>
+            <button class="btn" id="btn-go-config">去配置APIkey</button>
+        </div>
+
+        <!-- JD输入区域 -->
+        <div class="card mt-20">
+            <div class="input-group">
+                <label class="input-label">岗位JD（Job Description）</label>
+                <textarea
+                    class="input-field"
+                    id="jd-input"
+                    placeholder="请粘贴或输入岗位JD内容..."
+                    rows="8"
+                ></textarea>
+            </div>
+        </div>
+
+        <!-- 自定义匹配维度 -->
+        <div class="card mt-20" id="dimensions-card">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0;">
+                <label class="input-label" style="margin-bottom:0;">自定义匹配维度（可选）</label>
+                <button class="btn btn-secondary" id="btn-toggle-dimensions" style="padding:6px 14px;font-size:13px;">展开设置</button>
+            </div>
+            <div id="dimensions-panel" style="display:none;margin-top:16px;">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                    <div class="input-group" style="margin-bottom:0;">
+                        <label class="input-label">工作年限要求</label>
+                        <input type="text" class="input-field" id="dim-work-years" placeholder="例：3年以上、5-10年">
+                    </div>
+                    <div class="input-group" style="margin-bottom:0;">
+                        <label class="input-label">学历要求</label>
+                        <input type="text" class="input-field" id="dim-education" placeholder="例：本科及以上、硕士优先">
+                    </div>
+                    <div class="input-group" style="margin-bottom:0;grid-column:1/-1;">
+                        <label class="input-label">核心技能权重说明</label>
+                        <input type="text" class="input-field" id="dim-skill-weights" placeholder="例：Python、机器学习优先；SQL必须掌握">
+                    </div>
+                    <div class="input-group" style="margin-bottom:0;grid-column:1/-1;">
+                        <label class="input-label">其他要求</label>
+                        <input type="text" class="input-field" id="dim-extra" placeholder="例：有大厂经验优先、需要英语良好">
+                    </div>
+                </div>
+                <p style="color:#999;font-size:12px;margin-top:10px;">以上维度将作为额外参考传给大模型，影响匹配评分和分析结果。</p>
+            </div>
+        </div>
+
+        <!-- 简历上传区域 -->
+        <div class="card mt-20">
+            <div class="input-group">
+                <label class="input-label">上传简历</label>
+                <div class="upload-area" id="upload-area">
+                    <div class="icon">📁</div>
+                    <div class="text">拖拽简历文件到此处，或点击选择文件</div>
+                    <div class="hint">支持 PDF、DOC、DOCX、TXT、RTF、图片（JPG/PNG等）格式，最多上传10份</div>
+                    <input
+                        type="file"
+                        id="file-input"
+                        accept=".pdf,.doc,.docx,.txt,.rtf,.jpg,.jpeg,.png,.bmp,.gif,.tiff,.webp"
+                        multiple
+                        hidden
+                    >
+                </div>
+
+                <!-- 文件列表 -->
+                <div class="file-list" id="file-list"></div>
+            </div>
+
+            <!-- 操作按钮 -->
+            <div class="text-center mt-20">
+                <button class="btn btn-primary" id="btn-screening" style="min-width: 200px;">
+                    智能筛选
+                </button>
+                <button class="btn btn-secondary" id="btn-clear" style="margin-left: 12px;">
+                    清空内容
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 未配置拦截弹框 -->
+    <div class="modal-overlay" id="modal-block">
+        <div class="modal-content">
+            <div class="modal-header">缺少APIkey配置</div>
+            <div class="modal-body">
+                当前未完成大模型APIkey有效配置，无法执行智能筛选，请先完成配置后再操作。
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="btn-cancel">取消</button>
+                <button class="btn btn-warning" id="btn-modal-config">去配置APIkey</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 加载状态 -->
+    <div class="loading-overlay" id="loading-overlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text" id="loading-text">正在分析中...</div>
+    </div>
+
+    <script src="/static/js/state.js"></script>
+    <script src="/static/js/cache.js"></script>
+    <script src="/static/js/api.js"></script>
+    <script>
+        // 页面初始化
+        document.addEventListener('DOMContentLoaded', async function() {
+            // 初始化全局状态
+            await GlobalState.init();
+
+            // 初始化页面
+            initPage();
+
+            // 绑定事件
+            bindEvents();
+
+            // 监听状态变化
+            GlobalState.addListener(handleStateChange);
+        });
+
+        // 文件列表
+        let uploadedFiles = [];
+
+        // 初始化页面
+        function initPage() {
+            // 检查配置状态，更新UI
+            updateAlertBanner();
+
+            // 恢复缓存数据
+            restoreFromCache();
+        }
+
+        // 恢复缓存数据
+        function restoreFromCache() {
+            // 恢复JD内容
+            const savedJD = CacheManager.getJD();
+            if (savedJD) {
+                document.getElementById('jd-input').value = savedJD;
+            }
+
+            // 恢复简历列表
+            const savedResumes = CacheManager.getResumeList();
+            if (savedResumes && savedResumes.length > 0) {
+                // 从缓存恢复文件（需要用户重新选择文件，因为File对象不可序列化）
+                // 这里只显示文件名列表
+                uploadedFiles = [];
+                savedResumes.forEach(item => {
+                    uploadedFiles.push({
+                        name: item.file_name,
+                        size: item.file_size,
+                        type: item.file_type,
+                        fromCache: true,
+                        fileData: item.file_data
+                    });
+                });
+                renderFileList();
+            }
+        }
+
+        // 绑定事件
+        function bindEvents() {
+            // API配置按钮
+            document.getElementById('btn-config').addEventListener('click', goToConfig);
+            document.getElementById('btn-go-config').addEventListener('click', goToConfig);
+            document.getElementById('btn-modal-config').addEventListener('click', goToConfig);
+
+            // 取消按钮
+            document.getElementById('btn-cancel').addEventListener('click', closeModal);
+
+            // 智能筛选按钮
+            document.getElementById('btn-screening').addEventListener('click', handleScreening);
+
+            // 清空按钮
+            document.getElementById('btn-clear').addEventListener('click', clearContent);
+
+            // 文件上传
+            initUploadArea();
+
+            // 自定义维度面板切换
+            document.getElementById('btn-toggle-dimensions').addEventListener('click', function() {
+                const panel = document.getElementById('dimensions-panel');
+                const isHidden = panel.style.display === 'none';
+                panel.style.display = isHidden ? 'block' : 'none';
+                this.textContent = isHidden ? '收起设置' : '展开设置';
+            });
+        }
+
+        // 初始化上传区域
+        function initUploadArea() {
+            const uploadArea = document.getElementById('upload-area');
+            const fileInput = document.getElementById('file-input');
+
+            // 点击上传
+            uploadArea.addEventListener('click', function() {
+                fileInput.click();
+            });
+
+            // 文件选择
+            fileInput.addEventListener('change', function(e) {
+                handleFiles(e.target.files);
+                fileInput.value = ''; // 允许重复选择同一文件
+            });
+
+            // 拖拽上传
+            uploadArea.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                uploadArea.classList.add('dragover');
+            });
+
+            uploadArea.addEventListener('dragleave', function(e) {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+            });
+
+            uploadArea.addEventListener('drop', function(e) {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+                handleFiles(e.dataTransfer.files);
+            });
+        }
+
+        // 处理文件选择
+        function handleFiles(files) {
+            const validExtensions = ['.pdf', '.doc', '.docx', '.txt', '.rtf',
+                                     '.jpg', '.jpeg', '.png', '.bmp', '.gif', '.tiff', '.webp'];
+            const maxFiles = 10;
+            const maxSize = 10 * 1024 * 1024; // 10MB
+
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+
+                // 检查文件数量
+                if (uploadedFiles.length >= maxFiles) {
+                    alert(`最多只能上传${maxFiles}份简历`);
+                    break;
+                }
+
+                // 检查文件类型
+                const ext = '.' + file.name.split('.').pop().toLowerCase();
+                if (!validExtensions.includes(ext)) {
+                    alert(`不支持的文件格式: ${file.name}`);
+                    continue;
+                }
+
+                // 检查文件大小
+                if (file.size > maxSize) {
+                    alert(`文件过大: ${file.name} (最大10MB)`);
+                    continue;
+                }
+
+                // 检查是否已存在
+                if (uploadedFiles.some(f => f.name === file.name)) {
+                    alert(`文件已存在: ${file.name}`);
+                    continue;
+                }
+
+                uploadedFiles.push(file);
+            }
+
+            renderFileList();
+            saveToCache();
+        }
+
+        // 渲染文件列表
+        function renderFileList() {
+            const container = document.getElementById('file-list');
+
+            if (uploadedFiles.length === 0) {
+                container.innerHTML = '';
+                return;
+            }
+
+            container.innerHTML = uploadedFiles.map((file, index) => `
+                <div class="file-item">
+                    <span class="name">📄 ${file.name}</span>
+                    <span class="remove" data-index="${index}">✕</span>
+                </div>
+            `).join('');
+
+            // 绑定删除事件
+            container.querySelectorAll('.remove').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const index = parseInt(this.dataset.index);
+                    uploadedFiles.splice(index, 1);
+                    renderFileList();
+                    saveToCache();
+                });
+            });
+        }
+
+        // 保存到缓存
+        async function saveToCache() {
+            // 保存JD
+            const jdContent = document.getElementById('jd-input').value;
+            CacheManager.saveJD(jdContent);
+
+            // 保存文件列表
+            if (uploadedFiles.length > 0) {
+                const cacheableFiles = [];
+                for (const file of uploadedFiles) {
+                    if (file.fromCache && file.fileData) {
+                        // 从缓存恢复的文件
+                        cacheableFiles.push({
+                            file_name: file.name,
+                            file_size: file.size,
+                            file_type: file.type,
+                            file_data: file.fileData
+                        });
+                    } else {
+                        // 新上传的文件
+                        try {
+                            const cacheable = await CacheManager.fileToCacheable(file);
+                            cacheableFiles.push(cacheable);
+                        } catch (e) {
+                            console.error('文件转换失败:', e);
+                        }
+                    }
+                }
+                CacheManager.saveResumeList(cacheableFiles);
+            }
+        }
+
+        // 清空内容
+        function clearContent() {
+            if (!confirm('确定要清空所有内容吗？')) return;
+
+            document.getElementById('jd-input').value = '';
+            uploadedFiles = [];
+            renderFileList();
+            CacheManager.clearCache();
+        }
+
+        // 处理智能筛选
+        async function handleScreening() {
+            const jdContent = document.getElementById('jd-input').value.trim();
+
+            // 验证JD
+            if (!jdContent) {
+                alert('请输入岗位JD内容');
+                return;
+            }
+
+            // 验证文件
+            if (uploadedFiles.length === 0) {
+                alert('请上传简历文件');
+                return;
+            }
+
+            // 检查配置状态
+            if (!GlobalState.isValid()) {
+                showModal();
+                return;
+            }
+
+            // 收集自定义维度
+            const workYears = document.getElementById('dim-work-years').value.trim();
+            const education = document.getElementById('dim-education').value.trim();
+            const skillWeights = document.getElementById('dim-skill-weights').value.trim();
+            const extra = document.getElementById('dim-extra').value.trim();
+            const dimensions = (workYears || education || skillWeights || extra) ? {
+                work_years: workYears,
+                education: education,
+                skill_weights: skillWeights,
+                extra: extra
+            } : null;
+
+            // 准备文件
+            const files = uploadedFiles.map(f => {
+                if (f.fromCache && f.fileData) {
+                    return dataURLtoFile(f.fileData, f.name);
+                }
+                return f;
+            });
+
+            // 显示加载状态
+            showLoading('正在分析简历，请稍候...');
+
+            try {
+                const response = await API.screening(jdContent, files, dimensions);
+
+                if (response.success) {
+                    // 保存结果到sessionStorage（用于结果页展示）
+                    sessionStorage.setItem('screening_results', JSON.stringify(response));
+
+                    // 清空缓存（完成筛选后）
+                    CacheManager.clearCache();
+
+                    // 跳转到结果页
+                    window.location.href = '/result';
+                } else {
+                    alert('筛选失败: ' + (response.detail || '未知错误'));
+                }
+            } catch (error) {
+                alert('筛选失败: ' + error.message);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // 将dataURL转换为File对象
+        function dataURLtoFile(dataurl, filename) {
+            const arr = dataurl.split(',');
+            const mime = arr[0].match(/:(.*?);/)[1];
+            const bstr = atob(arr[1]);
+            let n = bstr.length;
+            const u8arr = new Uint8Array(n);
+            while (n--) {
+                u8arr[n] = bstr.charCodeAt(n);
+            }
+            return new File([u8arr], filename, { type: mime });
+        }
+
+        // 处理状态变化
+        function handleStateChange(state) {
+            updateAlertBanner();
+        }
+
+        // 更新警示通栏
+        function updateAlertBanner() {
+            const alertBanner = document.getElementById('alert-banner');
+            const isValid = GlobalState.isValid();
+
+            if (isValid) {
+                alertBanner.classList.add('hidden');
+            } else {
+                alertBanner.classList.remove('hidden');
+            }
+        }
+
+        // 跳转到配置页
+        function goToConfig() {
+            // 保存当前页面数据
+            saveToCache();
+            window.location.href = '/config';
+        }
+
+        // 显示弹框
+        function showModal() {
+            document.getElementById('modal-block').classList.add('active');
+        }
+
+        // 关闭弹框
+        function closeModal() {
+            document.getElementById('modal-block').classList.remove('active');
+        }
+
+        // 显示加载状态
+        function showLoading(text) {
+            document.getElementById('loading-text').textContent = text;
+            document.getElementById('loading-overlay').classList.add('active');
+        }
+
+        // 隐藏加载状态
+        function hideLoading() {
+            document.getElementById('loading-overlay').classList.remove('active');
+        }
+
+        // JD输入时自动保存
+        document.getElementById('jd-input').addEventListener('input', function() {
+            CacheManager.saveJD(this.value);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>筛选结果 - 智能简历筛选工具</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <!-- 页面头部 -->
+    <header class="page-header">
+        <h1 class="page-title">智能简历筛选工具</h1>
+        <div>
+            <button class="btn btn-primary" id="btn-export" style="margin-right: 8px;">导出 Excel</button>
+            <button class="btn btn-secondary" id="btn-home">返回主页</button>
+            <button class="btn btn-secondary" id="btn-config" style="margin-left: 8px;">API 配置</button>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- 结果布局 -->
+        <div class="result-layout">
+            <!-- 左侧简历列表 -->
+            <div class="result-sidebar">
+                <div class="header">简历列表（按匹配度排序）</div>
+                <div class="result-list" id="result-list">
+                    <!-- 简历列表项 -->
+                </div>
+            </div>
+
+            <!-- 右侧详情 -->
+            <div class="result-detail" id="result-detail">
+                <!-- 简历详情 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 加载状态 -->
+    <div class="loading-overlay" id="loading-overlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">正在加载...</div>
+    </div>
+
+    <script src="/static/js/state.js"></script>
+    <script src="/static/js/api.js"></script>
+    <script>
+        // 筛选结果数据
+        let resultsData = null;
+        let currentIndex = 0;
+
+        // 页面初始化
+        document.addEventListener('DOMContentLoaded', async function() {
+            await GlobalState.init();
+            initPage();
+            bindEvents();
+        });
+
+        // 初始化页面
+        function initPage() {
+            // 获取结果数据
+            try {
+                const data = sessionStorage.getItem('screening_results');
+                resultsData = JSON.parse(data);
+            } catch (e) {
+                resultsData = null;
+            }
+
+            if (!resultsData || !resultsData.results || resultsData.results.length === 0) {
+                // 无数据，跳转回主页
+                alert('无筛选结果，请重新筛选');
+                window.location.href = '/';
+                return;
+            }
+
+            // 渲染列表
+            renderResultList();
+
+            // 默认选中第一个
+            selectResult(0);
+        }
+
+        // 绑定事件
+        function bindEvents() {
+            document.getElementById('btn-home').addEventListener('click', goHome);
+            document.getElementById('btn-config').addEventListener('click', goConfig);
+            document.getElementById('btn-export').addEventListener('click', exportExcel);
+        }
+
+        // 导出Excel
+        async function exportExcel() {
+            if (!resultsData || !resultsData.results || resultsData.results.length === 0) {
+                alert('没有可导出的数据');
+                return;
+            }
+
+            const btn = document.getElementById('btn-export');
+            btn.disabled = true;
+            btn.textContent = '导出中...';
+
+            try {
+                const { blob, filename } = await API.exportExcel(resultsData.results);
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            } catch (error) {
+                alert('导出失败: ' + error.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '导出 Excel';
+            }
+        }
+
+        // 渲染结果列表
+        function renderResultList() {
+            const container = document.getElementById('result-list');
+            const results = resultsData.results;
+
+            container.innerHTML = results.map((item, index) => `
+                <div class="result-item ${index === currentIndex ? 'active' : ''}" data-index="${index}">
+                    <div class="name">📄 ${item.resume_name}</div>
+                    <div class="score">${item.score || 0}分</div>
+                </div>
+            `).join('');
+
+            // 绑定点击事件
+            container.querySelectorAll('.result-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    const index = parseInt(this.dataset.index);
+                    selectResult(index);
+                });
+            });
+        }
+
+        // 选择结果
+        function selectResult(index) {
+            currentIndex = index;
+            const results = resultsData.results;
+            const item = results[index];
+
+            // 更新列表选中状态
+            document.querySelectorAll('.result-item').forEach((el, i) => {
+                el.classList.toggle('active', i === index);
+            });
+
+            // 渲染详情
+            renderDetail(item);
+        }
+
+        // 渲染详情
+        function renderDetail(item) {
+            const container = document.getElementById('result-detail');
+
+            const matchingPoints = item.matching_points || [];
+            const shortcomings = item.shortcomings || [];
+            const interviewQuestions = item.interview_questions || [];
+
+            container.innerHTML = `
+                <div class="detail-section">
+                    <div class="title">简历名称</div>
+                    <div class="content">${item.resume_name}</div>
+                </div>
+
+                <div class="detail-section">
+                    <div class="title">简历概述</div>
+                    <div class="content">${item.summary || '暂无概述'}</div>
+                </div>
+
+                <div class="detail-section">
+                    <div class="title">与岗位的匹配点</div>
+                    <div class="content">
+                        ${matchingPoints.length > 0 ? `
+                            <ul>
+                                ${matchingPoints.map(p => `<li>${p}</li>`).join('')}
+                            </ul>
+                        ` : '暂无'}
+                    </div>
+                </div>
+
+                <div class="detail-section">
+                    <div class="title">与岗位的不足点</div>
+                    <div class="content">
+                        ${shortcomings.length > 0 ? `
+                            <ul>
+                                ${shortcomings.map(s => `<li>${s}</li>`).join('')}
+                            </ul>
+                        ` : '暂无'}
+                    </div>
+                </div>
+
+                <div class="detail-section">
+                    <div class="title">最适合的3个面试问题</div>
+                    <div class="content">
+                        ${interviewQuestions.length > 0 ? `
+                            <ul>
+                                ${interviewQuestions.map(q => `<li>${q}</li>`).join('')}
+                            </ul>
+                        ` : '暂无'}
+                    </div>
+                </div>
+
+                <div class="detail-section">
+                    <div class="title">匹配度评分</div>
+                    <div class="content">
+                        <span class="score-badge">${item.score || 0}分</span>
+                    </div>
+                </div>
+            `;
+
+            // 添加评分徽章样式
+            const style = document.createElement('style');
+            style.textContent = `
+                .score-badge {
+                    display: inline-block;
+                    padding: 8px 20px;
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    color: #fff;
+                    border-radius: 20px;
+                    font-size: 18px;
+                    font-weight: 600;
+                }
+            `;
+            if (!document.querySelector('#score-style')) {
+                style.id = 'score-style';
+                document.head.appendChild(style);
+            }
+        }
+
+        // 返回主页
+        function goHome() {
+            window.location.href = '/';
+        }
+
+        // 跳转配置页
+        function goConfig() {
+            window.location.href = '/config';
+        }
+    </script>
+</body>
+</html>
