@@ -3,7 +3,7 @@
  */
 
 const API = (function() {
-    const BASE_URL = '/api';
+    const BASE_URL = 'api';
 
     /**
      * 通用请求方法

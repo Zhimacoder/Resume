@@ -37,6 +37,9 @@ logs/
 # ── IDE ──────────────────────────────────────────────────────
 .idea/
 .vscode/
+.claude/
+.trae/
+.comate/
 *.swp
 *.swo
 

@@ -1,0 +1,31 @@
+services:
+  resume-screening:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: resume-screening
+    expose:
+      - "8000"
+    environment:
+      - TZ=Asia/Shanghai
+      - CORS_ORIGINS=https://zhimacoder.com,http://localhost:8000,http://127.0.0.1:8000
+    restart: unless-stopped
+    networks:
+      - football-network
+    volumes:
+      - resume-config:/app/config
+      - resume-logs:/app/logs
+      - resume-key:/root/.config/resume_screening
+
+networks:
+  football-network:
+    external: true
+    name: football-edge_football-network
+
+volumes:
+  resume-config:
+    driver: local
+  resume-logs:
+    driver: local
+  resume-key:
+    driver: local

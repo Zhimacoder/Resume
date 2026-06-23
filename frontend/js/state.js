@@ -25,7 +25,7 @@ const GlobalState = (function() {
      */
     async function checkConfigStatus() {
         try {
-            const response = await fetch('/api/config/status');
+            const response = await fetch('api/config/status');
             if (response.ok) {
                 const data = await response.json();
                 state.is_config_valid = data.is_config_valid;
@@ -108,7 +108,7 @@ const GlobalState = (function() {
      */
     async function saveConfig(config) {
         try {
-            const response = await fetch('/api/config', {
+            const response = await fetch('api/config', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

@@ -7,6 +7,7 @@ const CacheManager = (function() {
     const CACHE_KEY = 'resume_screening_cache';
     const JD_KEY = 'jd_content';
     const RESUME_LIST_KEY = 'resume_list';
+    const MAX_CACHE_SIZE = 1 * 1024 * 1024; // 单文件缓存上限 1MB
 
     /**
      * 保存JD内容
@@ -103,9 +104,22 @@ const CacheManager = (function() {
 
     /**
      * 将File对象转换为可缓存的对象
+     * 超过 1MB 的文件仅缓存元信息，不存储 base64 内容
      */
     async function fileToCacheable(file) {
         return new Promise((resolve, reject) => {
+            // 大文件仅缓存元信息
+            if (file.size > MAX_CACHE_SIZE) {
+                resolve({
+                    file_name: file.name,
+                    file_size: file.size,
+                    file_type: file.type,
+                    file_data: null,  // 大文件不存储 base64
+                    _large_file: true
+                });
+                return;
+            }
+
             const reader = new FileReader();
             reader.onload = function(e) {
                 resolve({

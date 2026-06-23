@@ -14,12 +14,23 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, HTMLResponse, StreamingResponse
 import uvicorn
 
+import os
+
 # 导入业务模块
-from config import load_config, save_config, get_config_status, DEFAULT_CONFIG
+from config import load_config, save_config, get_config_status, get_masked_config, DEFAULT_CONFIG
 from parser import parse_document
 from ocr import is_image_file, process_image
 from desensitizer import desensitize_resume
 from llm import analyze_resume, test_connection
+
+# 并发控制：同时处理最多 3 份简历
+_MAX_CONCURRENT_RESUMES = 3
+
+# CORS 允许来源（支持环境变量配置，逗号分隔）
+_CORS_ORIGINS = os.environ.get(
+    "CORS_ORIGINS",
+    "http://localhost:8000,http://127.0.0.1:8000,https://zhimacoder.com"
+).split(",")
 
 
 # 创建FastAPI应用
@@ -28,7 +39,7 @@ app = FastAPI(title="智能简历筛选工具", version="1.2.0")
 # 配置CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=_CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -46,8 +57,17 @@ if FRONTEND_DIR.exists():
 # ==================== 页面路由 ====================
 
 @app.get("/", response_class=HTMLResponse)
+async def landing_page():
+    """官网首页（产品介绍页）"""
+    landing_file = FRONTEND_DIR / "landing.html"
+    if landing_file.exists():
+        return FileResponse(str(landing_file))
+    return HTMLResponse(content="<h1>智能简历筛选工具</h1><p>landing.html not found</p>")
+
+
+@app.get("/app", response_class=HTMLResponse)
 async def index_page():
-    """主页"""
+    """应用主页（简历筛选工具）"""
     index_file = FRONTEND_DIR / "index.html"
     if index_file.exists():
         return FileResponse(str(index_file))
@@ -82,8 +102,8 @@ async def api_get_config_status():
 
 @app.get("/api/config")
 async def api_get_config():
-    """获取完整配置"""
-    return load_config()
+    """获取配置（API Key 已脱敏）"""
+    return get_masked_config()
 
 
 @app.post("/api/config")
@@ -115,17 +135,79 @@ async def api_test_connection(payload: Dict[str, Any]):
     api_key = payload.get("api_key", "")
     endpoint = payload.get("endpoint", "")
     model_name = payload.get("model_name", "")
+    api_secret = payload.get("api_secret", "")
 
     if not api_key:
         raise HTTPException(status_code=400, detail="api_key 不能为空")
     if not endpoint:
         raise HTTPException(status_code=400, detail="endpoint 不能为空")
 
-    result = test_connection(model_type, api_key, endpoint, model_name)
+    result = test_connection(model_type, api_key, endpoint, model_name, api_secret)
     return result
 
 
 # ==================== 简历筛选接口 ====================
+
+async def _process_single_resume(
+    file: UploadFile,
+    current_model: str,
+    api_key: str,
+    endpoint: str,
+    jd_content: str,
+    model_name: str,
+    dimensions_dict: Optional[Dict[str, Any]],
+    api_secret: str = ""
+) -> Dict[str, Any]:
+    """处理单份简历：解析 → 脱敏 → LLM 分析（在线程池中执行以避免阻塞）"""
+    try:
+        # 读取文件内容
+        file_content = await file.read()
+        filename = file.filename
+
+        # 解析简历（在线程池中执行，避免阻塞事件循环）
+        ext = Path(filename).suffix.lower()
+        if ext in ['.jpg', '.jpeg', '.png', '.bmp', '.gif', '.tiff', '.webp']:
+            resume_text = await asyncio.to_thread(process_image, file_content, filename)
+        else:
+            resume_text = await asyncio.to_thread(parse_document, file_content, filename)
+
+        if not resume_text or "[解析失败" in resume_text or "[需要" in resume_text:
+            return {
+                "filename": filename,
+                "error": f"简历解析失败: {resume_text}"
+            }
+
+        # 脱敏处理（在线程池中执行）
+        desensitized_text = await asyncio.to_thread(desensitize_resume, resume_text)
+
+        # 调用大模型分析（在线程池中执行，避免阻塞事件循环）
+        analysis_result = await asyncio.to_thread(
+            analyze_resume,
+            model_type=current_model,
+            api_key=api_key,
+            endpoint=endpoint,
+            jd_content=jd_content,
+            resume_content=desensitized_text,
+            resume_name=filename,
+            model_name=model_name,
+            dimensions=dimensions_dict,
+            api_secret=api_secret
+        )
+
+        if analysis_result:
+            return analysis_result
+        else:
+            return {
+                "filename": filename,
+                "error": "大模型分析失败"
+            }
+
+    except Exception as e:
+        return {
+            "filename": file.filename if file and file.filename else "unknown",
+            "error": str(e)
+        }
+
 
 @app.post("/api/screening")
 async def api_screening(
@@ -164,6 +246,7 @@ async def api_screening(
     api_key = model_config.get("api_key", "")
     endpoint = model_config.get("endpoint", "")
     model_name = model_config.get("model_version", "")
+    api_secret = model_config.get("api_secret", "")
 
     if not api_key or not endpoint:
         raise HTTPException(status_code=400, detail="当前模型配置不完整")
@@ -176,64 +259,32 @@ async def api_screening(
         except json.JSONDecodeError:
             dimensions_dict = None
 
-    results = []
-    errors = []
+    # 并发处理所有简历（使用 Semaphore 限制并发数）
+    semaphore = asyncio.Semaphore(_MAX_CONCURRENT_RESUMES)
 
-    # 处理每个简历文件
-    for file in files:
-        try:
-            # 读取文件内容
-            file_content = await file.read()
-            filename = file.filename
-
-            # 解析简历
-            resume_text = ""
-
-            # 根据文件类型选择解析方式
-            ext = Path(filename).suffix.lower()
-
-            if ext in ['.jpg', '.jpeg', '.png', '.bmp', '.gif', '.tiff', '.webp']:
-                # 图片文件 - 使用OCR
-                resume_text = process_image(file_content, filename)
-            else:
-                # 文档文件 - 解析内容
-                resume_text = parse_document(file_content, filename)
-
-            if not resume_text or "[解析失败" in resume_text or "[需要" in resume_text:
-                errors.append({
-                    "filename": filename,
-                    "error": f"简历解析失败: {resume_text}"
-                })
-                continue
-
-            # 脱敏处理
-            desensitized_text = desensitize_resume(resume_text)
-
-            # 调用大模型分析
-            analysis_result = analyze_resume(
-                model_type=current_model,
+    async def _concurrent_process(file: UploadFile):
+        async with semaphore:
+            return await _process_single_resume(
+                file=file,
+                current_model=current_model,
                 api_key=api_key,
                 endpoint=endpoint,
                 jd_content=jd_content,
-                resume_content=desensitized_text,
-                resume_name=filename,
                 model_name=model_name,
-                dimensions=dimensions_dict
+                dimensions_dict=dimensions_dict,
+                api_secret=api_secret
             )
 
-            if analysis_result:
-                results.append(analysis_result)
-            else:
-                errors.append({
-                    "filename": filename,
-                    "error": "大模型分析失败"
-                })
+    all_results = await asyncio.gather(*[_concurrent_process(f) for f in files])
 
-        except Exception as e:
-            errors.append({
-                "filename": file.filename if file else "unknown",
-                "error": str(e)
-            })
+    # 分离成功结果和错误
+    results = []
+    errors = []
+    for item in all_results:
+        if "error" in item:
+            errors.append(item)
+        else:
+            results.append(item)
 
     # 按匹配度排序
     results.sort(key=lambda x: x.get("score", 0), reverse=True)
@@ -257,16 +308,13 @@ async def api_parse_resume(file: UploadFile = File(...)):
         file_content = await file.read()
         filename = file.filename
 
-        # 解析简历
         ext = Path(filename).suffix.lower()
-
         if ext in ['.jpg', '.jpeg', '.png', '.bmp', '.gif', '.tiff', '.webp']:
-            resume_text = process_image(file_content, filename)
+            resume_text = await asyncio.to_thread(process_image, file_content, filename)
         else:
-            resume_text = parse_document(file_content, filename)
+            resume_text = await asyncio.to_thread(parse_document, file_content, filename)
 
-        # 脱敏
-        desensitized_text = desensitize_resume(resume_text)
+        desensitized_text = await asyncio.to_thread(desensitize_resume, resume_text)
 
         return {
             "success": True,

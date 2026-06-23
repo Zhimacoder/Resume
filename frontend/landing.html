@@ -1,0 +1,1134 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ResumeScreen · 智能简历筛选工具</title>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #050506;
+            --bg-elevated: rgba(255, 255, 255, 0.04);
+            --bg-card: rgba(255, 255, 255, 0.03);
+            --border: rgba(255, 255, 255, 0.09);
+            --border-hover: rgba(255, 255, 255, 0.15);
+            --text-primary: #ededef;
+            --text-secondary: #a3a8b2;
+            --text-muted: #6b7280;
+            --accent: #7c8bff;
+            --accent-hover: #9aa7ff;
+            --accent-soft: rgba(124, 139, 255, 0.12);
+            --radius-pill: 999px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --font-sans: 'DM Sans', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            font-size: 15px;
+            line-height: 1.7;
+            color: var(--text-primary);
+            background-color: var(--bg);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        img {
+            max-width: 100%;
+            display: block;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 32px;
+        }
+
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            background: rgba(5, 5, 6, 0.72);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            transition: all 0.3s ease;
+        }
+
+        .navbar-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 32px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            font-size: 15px;
+            letter-spacing: -0.3px;
+        }
+
+        .navbar-brand-icon {
+            width: 28px;
+            height: 28px;
+            background: linear-gradient(135deg, #7c8bff 0%, #a855f7 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .navbar-links {
+            display: flex;
+            align-items: center;
+            gap: 32px;
+            list-style: none;
+        }
+
+        .navbar-links a {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            transition: color 0.2s ease;
+        }
+
+        .navbar-links a:hover {
+            color: var(--text-primary);
+        }
+
+        .navbar-cta {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 22px;
+            font-size: 14px;
+            font-weight: 500;
+            border: none;
+            border-radius: var(--radius-pill);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            white-space: nowrap;
+            line-height: 1;
+            font-family: inherit;
+        }
+
+        .btn-primary {
+            background: var(--text-primary);
+            color: var(--bg);
+        }
+
+        .btn-primary:hover {
+            background: #fff;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: var(--bg-elevated);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: var(--border-hover);
+        }
+
+        .btn-ghost {
+            background: transparent;
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-ghost:hover {
+            background: var(--bg-elevated);
+            border-color: var(--border-hover);
+        }
+
+        .btn-lg {
+            padding: 14px 32px;
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .hero {
+            padding: 160px 0 100px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -300px;
+            right: -200px;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(124, 139, 255, 0.15) 0%, transparent 60%);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .hero::after {
+            content: '';
+            position: absolute;
+            bottom: -200px;
+            left: -300px;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(168, 85, 247, 0.1) 0%, transparent 60%);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .hero-inner {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 16px;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-pill);
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 28px;
+        }
+
+        .hero-badge-dot {
+            width: 6px;
+            height: 6px;
+            background: var(--accent);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        .hero h1 {
+            font-size: 64px;
+            font-weight: 800;
+            line-height: 1.1;
+            letter-spacing: -1.5px;
+            margin-bottom: 24px;
+        }
+
+        .hero h1 .gradient-text {
+            background: linear-gradient(135deg, #7c8bff 0%, #a855f7 50%, #ec4899 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-desc {
+            font-size: 17px;
+            line-height: 1.8;
+            color: var(--text-secondary);
+            margin-bottom: 40px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .hero-actions {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+
+        .hero-meta {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 32px;
+            margin-top: 56px;
+            padding-top: 40px;
+            border-top: 1px solid var(--border);
+        }
+
+        .meta-item {
+            text-align: center;
+        }
+
+        .meta-number {
+            font-size: 28px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            margin-bottom: 4px;
+        }
+
+        .meta-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .section {
+            padding: 100px 0;
+            border-top: 1px solid var(--border);
+        }
+
+        .section-header {
+            text-align: center;
+            max-width: 640px;
+            margin: 0 auto 64px;
+        }
+
+        .section-label {
+            display: inline-block;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--accent);
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            margin-bottom: 14px;
+        }
+
+        .section-title {
+            font-size: 40px;
+            font-weight: 800;
+            line-height: 1.2;
+            letter-spacing: -1px;
+            margin-bottom: 16px;
+        }
+
+        .section-desc {
+            font-size: 16px;
+            line-height: 1.8;
+            color: var(--text-secondary);
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+
+        .feature-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 32px 28px;
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover {
+            background: var(--bg-elevated);
+            border-color: var(--border-hover);
+            transform: translateY(-2px);
+        }
+
+        .feature-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: var(--accent-soft);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            margin-bottom: 20px;
+        }
+
+        .feature-title {
+            font-size: 17px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            letter-spacing: -0.3px;
+        }
+
+        .feature-desc {
+            font-size: 14px;
+            line-height: 1.7;
+            color: var(--text-secondary);
+        }
+
+        .how-section {
+            background: var(--bg-elevated);
+        }
+
+        .steps {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+        }
+
+        .step-card {
+            text-align: center;
+            padding: 40px 28px;
+        }
+
+        .step-number {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 20px;
+            background: var(--text-primary);
+            color: var(--bg);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 800;
+        }
+
+        .step-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            letter-spacing: -0.3px;
+        }
+
+        .step-desc {
+            font-size: 14px;
+            line-height: 1.7;
+            color: var(--text-secondary);
+        }
+
+        .models-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+
+        .model-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 24px 20px;
+            text-align: center;
+            transition: all 0.25s ease;
+        }
+
+        .model-card:hover {
+            background: var(--bg-elevated);
+            border-color: var(--accent);
+            transform: translateY(-2px);
+        }
+
+        .model-icon {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .model-name {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .model-desc {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .privacy-section {
+            background: var(--bg-elevated);
+        }
+
+        .privacy-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+
+        .privacy-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 32px 28px;
+            transition: all 0.3s ease;
+        }
+
+        .privacy-card:hover {
+            border-color: var(--border-hover);
+        }
+
+        .privacy-icon {
+            font-size: 32px;
+            margin-bottom: 18px;
+        }
+
+        .privacy-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .privacy-desc {
+            font-size: 14px;
+            line-height: 1.7;
+            color: var(--text-secondary);
+        }
+
+        .cta-section {
+            padding: 120px 0;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta-section::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(124, 139, 255, 0.12) 0%, transparent 60%);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .cta-inner {
+            position: relative;
+            z-index: 1;
+        }
+
+        .cta-title {
+            font-size: 44px;
+            font-weight: 800;
+            line-height: 1.2;
+            letter-spacing: -1px;
+            margin-bottom: 16px;
+        }
+
+        .cta-desc {
+            font-size: 16px;
+            line-height: 1.8;
+            color: var(--text-secondary);
+            margin-bottom: 36px;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .footer {
+            border-top: 1px solid var(--border);
+            padding: 60px 0 32px;
+        }
+
+        .footer-top {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 48px;
+            margin-bottom: 48px;
+        }
+
+        .footer-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            font-size: 16px;
+            margin-bottom: 14px;
+        }
+
+        .footer-brand-icon {
+            width: 28px;
+            height: 28px;
+            background: linear-gradient(135deg, #7c8bff 0%, #a855f7 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .footer-desc {
+            font-size: 14px;
+            line-height: 1.7;
+            color: var(--text-secondary);
+            margin-bottom: 18px;
+        }
+
+        .footer-brand-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: var(--accent);
+            font-weight: 500;
+        }
+
+        .footer-brand-link:hover {
+            color: var(--accent-hover);
+        }
+
+        .footer-col h4 {
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 18px;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+        }
+
+        .footer-col ul {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .footer-col a {
+            font-size: 14px;
+            color: var(--text-secondary);
+            transition: color 0.2s;
+        }
+
+        .footer-col a:hover {
+            color: var(--text-primary);
+        }
+
+        .footer-bottom {
+            padding-top: 28px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .brand-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .brand-tag a {
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .brand-tag a:hover {
+            color: var(--text-primary);
+        }
+
+        .fade-in {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.7s ease, transform 0.7s ease;
+        }
+
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        @media (max-width: 960px) {
+            .container,
+            .navbar-inner {
+                padding: 0 24px;
+            }
+
+            .hero h1 {
+                font-size: 48px;
+            }
+
+            .section-title {
+                font-size: 32px;
+            }
+
+            .cta-title {
+                font-size: 36px;
+            }
+
+            .features-grid,
+            .privacy-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .steps {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+
+            .step-card {
+                padding: 28px 20px;
+            }
+
+            .models-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .footer-top {
+                grid-template-columns: 1fr 1fr;
+                gap: 32px;
+            }
+
+            .navbar-links {
+                display: none;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .container,
+            .navbar-inner {
+                padding: 0 20px;
+            }
+
+            .hero {
+                padding: 120px 0 70px;
+            }
+
+            .hero h1 {
+                font-size: 36px;
+                letter-spacing: -1px;
+            }
+
+            .hero-desc {
+                font-size: 15px;
+            }
+
+            .hero-meta {
+                gap: 24px;
+                flex-wrap: wrap;
+            }
+
+            .meta-number {
+                font-size: 22px;
+            }
+
+            .section {
+                padding: 70px 0;
+            }
+
+            .section-title {
+                font-size: 28px;
+            }
+
+            .section-desc {
+                font-size: 15px;
+            }
+
+            .features-grid,
+            .privacy-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .models-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .cta-section {
+                padding: 80px 0;
+            }
+
+            .cta-title {
+                font-size: 28px;
+            }
+
+            .footer-top {
+                grid-template-columns: 1fr;
+                gap: 28px;
+            }
+
+            .footer-bottom {
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
+
+            .hero-actions {
+                flex-direction: column;
+            }
+
+            .btn-lg {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-inner">
+            <a href="/" class="navbar-brand">
+                <div class="navbar-brand-icon">📄</div>
+                <span>ResumeScreen</span>
+            </a>
+            <ul class="navbar-links">
+                <li><a href="#features">功能特性</a></li>
+                <li><a href="#how">使用流程</a></li>
+                <li><a href="#models">支持模型</a></li>
+                <li><a href="#privacy">隐私安全</a></li>
+            </ul>
+            <div class="navbar-cta">
+                <a href="https://zhimacoder.com/" target="_blank" class="btn btn-ghost" style="padding:8px 18px;font-size:13px;">
+                    智码玩家 ↗
+                </a>
+                <a href="/app" class="btn btn-primary" style="padding:8px 20px;font-size:13px;">立即使用</a>
+            </div>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="container">
+            <div class="hero-inner">
+                <div class="hero-badge">
+                    <span class="hero-badge-dot"></span>
+                    <span>智码玩家出品 · 免费开源 · MIT License</span>
+                </div>
+                <h1>
+                    让AI帮你<br>
+                    <span class="gradient-text">筛选简历</span>
+                </h1>
+                <p class="hero-desc">
+                    基于大语言模型的智能简历筛选工具。支持云端一键使用，也可完全本地部署。
+                    多模型接入、自动脱敏、智能匹配、Excel 导出，从上传到出结果，三步搞定。
+                </p>
+                <div class="hero-actions">
+                    <a href="/app" class="btn btn-primary btn-lg">🚀 云端免费使用</a>
+                    <a href="https://github.com/Zhimacoder/Resume" target="_blank" class="btn btn-secondary btn-lg">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="margin-right:2px;"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                        GitHub
+                    </a>
+                </div>
+                <div class="hero-meta">
+                    <div class="meta-item">
+                        <div class="meta-number">7+</div>
+                        <div class="meta-label">支持大模型</div>
+                    </div>
+                    <div class="meta-item">
+                        <div class="meta-number">6+</div>
+                        <div class="meta-label">简历格式</div>
+                    </div>
+                    <div class="meta-item">
+                        <div class="meta-number">MIT</div>
+                        <div class="meta-label">开源协议</div>
+                    </div>
+                    <div class="meta-item">
+                        <div class="meta-number">3步</div>
+                        <div class="meta-label">完成筛选</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section" id="features">
+        <div class="container">
+            <div class="section-header fade-in">
+                <span class="section-label">Core Features</span>
+                <h2 class="section-title">强大的简历筛选能力</h2>
+                <p class="section-desc">
+                    从简历解析到智能匹配，覆盖招聘筛选全流程，帮助企业快速找到最合适的候选人
+                </p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card fade-in">
+                    <div class="feature-icon">🧠</div>
+                    <h3 class="feature-title">多模型灵活切换</h3>
+                    <p class="feature-desc">
+                        支持字节豆包、百度文心、阿里千问、智谱 GLM、DeepSeek 等主流大模型，也支持自定义 OpenAI 兼容接口。
+                    </p>
+                </div>
+                <div class="feature-card fade-in">
+                    <div class="feature-icon">📄</div>
+                    <h3 class="feature-title">多格式简历解析</h3>
+                    <p class="feature-desc">
+                        支持 PDF、Word、TXT、RTF 等文档格式，以及 JPG、PNG 等图片格式（内置 OCR 识别）。
+                    </p>
+                </div>
+                <div class="feature-card fade-in">
+                    <div class="feature-icon">🔒</div>
+                    <h3 class="feature-title">敏感信息脱敏</h3>
+                    <p class="feature-desc">
+                        自动识别并脱敏手机号、邮箱、身份证、姓名、微信号、薪资等敏感信息，保护候选人隐私。
+                    </p>
+                </div>
+                <div class="feature-card fade-in">
+                    <div class="feature-icon">🎯</div>
+                    <h3 class="feature-title">智能匹配评分</h3>
+                    <p class="feature-desc">
+                        基于岗位 JD 深度分析简历匹配度，输出匹配点、不足点及面试问题建议，减少主观偏差。
+                    </p>
+                </div>
+                <div class="feature-card fade-in">
+                    <div class="feature-icon">⚙️</div>
+                    <h3 class="feature-title">自定义匹配维度</h3>
+                    <p class="feature-desc">
+                        支持工作年限、学历要求、技能权重等自定义匹配维度，灵活适配不同岗位筛选标准。
+                    </p>
+                </div>
+                <div class="feature-card fade-in">
+                    <div class="feature-icon">📊</div>
+                    <h3 class="feature-title">Excel 一键导出</h3>
+                    <p class="feature-desc">
+                        筛选结果一键导出为 Excel 表格，包含排名、匹配度、概述、面试问题等完整信息。
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section how-section" id="how">
+        <div class="container">
+            <div class="section-header fade-in">
+                <span class="section-label">How It Works</span>
+                <h2 class="section-title">三步完成简历筛选</h2>
+                <p class="section-desc">
+                    简单直观的操作流程，无需复杂培训，HR 上手即用
+                </p>
+            </div>
+            <div class="steps">
+                <div class="step-card fade-in">
+                    <div class="step-number">1</div>
+                    <h3 class="step-title">填写岗位 JD</h3>
+                    <p class="step-desc">
+                        粘贴或输入岗位描述，设置自定义匹配维度（工作年限、学历要求、技能权重等）。
+                    </p>
+                </div>
+                <div class="step-card fade-in">
+                    <div class="step-number">2</div>
+                    <h3 class="step-title">上传简历文件</h3>
+                    <p class="step-desc">
+                        拖拽或点击上传简历，支持批量上传最多 10 份，自动完成解析、OCR 识别与信息脱敏。
+                    </p>
+                </div>
+                <div class="step-card fade-in">
+                    <div class="step-number">3</div>
+                    <h3 class="step-title">查看筛选结果</h3>
+                    <p class="step-desc">
+                        按匹配度从高到低排序展示，查看每份简历的详细分析，支持导出 Excel，高效推进面试。
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section" id="models">
+        <div class="container">
+            <div class="section-header fade-in">
+                <span class="section-label">Model Support</span>
+                <h2 class="section-title">主流大模型全覆盖</h2>
+                <p class="section-desc">
+                    接入多家主流大模型厂商，支持自定义 OpenAI 兼容接口，灵活选择，按需切换
+                </p>
+            </div>
+            <div class="models-grid">
+                <div class="model-card fade-in">
+                    <div class="model-icon">🫘</div>
+                    <div class="model-name">字节豆包</div>
+                    <div class="model-desc">Doubao</div>
+                </div>
+                <div class="model-card fade-in">
+                    <div class="model-icon">🎋</div>
+                    <div class="model-name">百度文心</div>
+                    <div class="model-desc">Wenxin</div>
+                </div>
+                <div class="model-card fade-in">
+                    <div class="model-icon">🐑</div>
+                    <div class="model-name">阿里千问</div>
+                    <div class="model-desc">Qwen</div>
+                </div>
+                <div class="model-card fade-in">
+                    <div class="model-icon">💎</div>
+                    <div class="model-name">智谱 GLM</div>
+                    <div class="model-desc">Zhipu GLM</div>
+                </div>
+                <div class="model-card fade-in">
+                    <div class="model-icon">🔍</div>
+                    <div class="model-name">DeepSeek</div>
+                    <div class="model-desc">深度求索</div>
+                </div>
+                <div class="model-card fade-in">
+                    <div class="model-icon">🎭</div>
+                    <div class="model-name">MinMax</div>
+                    <div class="model-desc">ABAB 大模型</div>
+                </div>
+                <div class="model-card fade-in">
+                    <div class="model-icon">🧩</div>
+                    <div class="model-name">自定义模型</div>
+                    <div class="model-desc">OpenAI 兼容</div>
+                </div>
+                <div class="model-card fade-in">
+                    <div class="model-icon">➕</div>
+                    <div class="model-name">更多接入中</div>
+                    <div class="model-desc">持续更新</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section privacy-section" id="privacy">
+        <div class="container">
+            <div class="section-header fade-in">
+                <span class="section-label">Privacy & Security</span>
+                <h2 class="section-title">数据安全，本地优先</h2>
+                <p class="section-desc">
+                    我们深知简历数据的敏感性，从架构设计上保障你的数据安全
+                </p>
+            </div>
+            <div class="privacy-grid">
+                <div class="privacy-card fade-in">
+                    <div class="privacy-icon">🏠</div>
+                    <h3 class="privacy-title">本地部署运行</h3>
+                    <p class="privacy-desc">
+                        工具完全在本地运行，简历数据仅存储在你的电脑上，不会上传至任何第三方服务器，从源头保障数据安全。
+                    </p>
+                </div>
+                <div class="privacy-card fade-in">
+                    <div class="privacy-icon">🔐</div>
+                    <h3 class="privacy-title">API Key 加密存储</h3>
+                    <p class="privacy-desc">
+                        使用 Fernet 对称加密算法存储 API Key，密钥独立保存在本地配置目录，不明文存储、不明文传输。
+                    </p>
+                </div>
+                <div class="privacy-card fade-in">
+                    <div class="privacy-icon">🛡️</div>
+                    <h3 class="privacy-title">脱敏后再分析</h3>
+                    <p class="privacy-desc">
+                        简历内容在发送给大模型前，自动完成敏感信息脱敏处理，只传输必要的工作经历、技能等非隐私信息。
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="cta-section">
+        <div class="container">
+            <div class="cta-inner fade-in">
+                <h2 class="cta-title">准备好提升招聘效率了吗？</h2>
+                <p class="cta-desc">
+                    立即开始使用智能简历筛选工具，让 AI 帮你从海量简历中快速找到最合适的候选人
+                </p>
+                <a href="/app" class="btn btn-primary btn-lg">🚀 立即开始使用</a>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-top">
+                <div class="footer-col">
+                    <div class="footer-brand">
+                        <div class="footer-brand-icon">📄</div>
+                        <span>ResumeScreen</span>
+                    </div>
+                    <p class="footer-desc">
+                        基于大语言模型的本地简历智能筛选工具，让招聘更高效、更智能、更安全。
+                    </p>
+                    <a href="https://zhimacoder.com/" target="_blank" class="footer-brand-link">
+                        → 来自智码玩家 ZHIMACODER
+                    </a>
+                </div>
+                <div class="footer-col">
+                    <h4>产品</h4>
+                    <ul>
+                        <li><a href="#features">功能特性</a></li>
+                        <li><a href="#how">使用流程</a></li>
+                        <li><a href="#models">支持模型</a></li>
+                        <li><a href="/app">立即使用</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>资源</h4>
+                    <ul>
+                        <li><a href="/config">API 配置</a></li>
+                        <li><a href="#privacy">隐私说明</a></li>
+                        <li><a href="https://github.com" target="_blank">GitHub</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>更多产品</h4>
+                    <ul>
+                        <li><a href="https://zhimacoder.com/agentos/" target="_blank">OPC-AgentOS</a></li>
+                        <li><a href="https://zhimacoder.com/" target="_blank">智码足球</a></li>
+                        <li><a href="https://zhimacoder.com/" target="_blank">全部产品 ↗</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <span>© 2026 ResumeScreen. All rights reserved.</span>
+                <span class="brand-tag">
+                    一个 <a href="https://zhimacoder.com/" target="_blank">智码玩家</a> 产品
+                </span>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -60px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.fade-in').forEach(el => {
+            observer.observe(el);
+        });
+
+        const navbar = document.querySelector('.navbar');
+        let lastScroll = 0;
+
+        window.addEventListener('scroll', () => {
+            const currentScroll = window.pageYOffset;
+            if (currentScroll > 20) {
+                navbar.style.boxShadow = '0 1px 0 rgba(255,255,255,0.04), 0 4px 20px rgba(0,0,0,0.3)';
+            } else {
+                navbar.style.boxShadow = 'none';
+            }
+            lastScroll = currentScroll;
+        });
+    </script>
+</body>
+</html>
