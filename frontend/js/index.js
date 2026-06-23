@@ -258,7 +258,7 @@ async function handleScreening() {
         if (response.success) {
             sessionStorage.setItem('screening_results', JSON.stringify(response));
             CacheManager.clearCache();
-            window.location.href = '/result';
+            window.location.href = 'result';
         } else {
             Toast.error('筛选失败: ' + (response.detail || '未知错误'));
         }
@@ -298,7 +298,7 @@ function updateAlertBanner() {
 
 function goToConfig() {
     saveToCache();
-    window.location.href = '/config';
+    window.location.href = 'config';
 }
 
 function showModal() {

@@ -4,26 +4,30 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ResumeScreen · 智能简历筛选工具</title>
-    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="icon" type="image/svg+xml" href="static/favicon.svg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #050506;
-            --bg-elevated: rgba(255, 255, 255, 0.04);
-            --bg-card: rgba(255, 255, 255, 0.03);
-            --border: rgba(255, 255, 255, 0.09);
-            --border-hover: rgba(255, 255, 255, 0.15);
-            --text-primary: #ededef;
-            --text-secondary: #a3a8b2;
-            --text-muted: #6b7280;
-            --accent: #7c8bff;
-            --accent-hover: #9aa7ff;
-            --accent-soft: rgba(124, 139, 255, 0.12);
+            --bg: #050512;
+            --bg-elevated: rgba(255, 255, 255, 0.06);
+            --bg-card: rgba(255, 255, 255, 0.045);
+            --border: rgba(255, 255, 255, 0.11);
+            --border-hover: rgba(255, 255, 255, 0.22);
+            --text-primary: #f7f7fb;
+            --text-secondary: #b6bdca;
+            --text-muted: #727b8c;
+            --accent: #8ea2ff;
+            --accent-hover: #b4c0ff;
+            --accent-soft: rgba(142, 162, 255, 0.16);
+            --accent-strong: #a855f7;
+            --success: #32d583;
+            --warning: #ffbd5a;
             --radius-pill: 999px;
-            --radius-md: 12px;
-            --radius-lg: 16px;
+            --radius-md: 14px;
+            --radius-lg: 22px;
+            --shadow-card: 0 24px 80px rgba(0, 0, 0, 0.35);
             --font-sans: 'DM Sans', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
         }
 
@@ -42,9 +46,35 @@
             font-size: 15px;
             line-height: 1.7;
             color: var(--text-primary);
-            background-color: var(--bg);
+            background:
+                radial-gradient(circle at 18% 8%, rgba(124, 139, 255, 0.18), transparent 30%),
+                radial-gradient(circle at 82% 18%, rgba(236, 72, 153, 0.14), transparent 28%),
+                linear-gradient(180deg, #080817 0%, #050512 42%, #070712 100%);
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
+            min-height: 100vh;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            pointer-events: none;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+            background-size: 72px 72px;
+            mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.8), transparent 72%);
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            pointer-events: none;
+            background: radial-gradient(circle at 50% -10%, rgba(255,255,255,0.08), transparent 35%);
         }
 
         a {
@@ -69,10 +99,10 @@
             left: 0;
             right: 0;
             z-index: 1000;
-            background: rgba(5, 5, 6, 0.72);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-bottom: 1px solid var(--border);
+            background: rgba(5, 5, 18, 0.66);
+            backdrop-filter: blur(24px) saturate(140%);
+            -webkit-backdrop-filter: blur(24px) saturate(140%);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
             transition: all 0.3s ease;
         }
 
@@ -96,14 +126,15 @@
         }
 
         .navbar-brand-icon {
-            width: 28px;
-            height: 28px;
-            background: linear-gradient(135deg, #7c8bff 0%, #a855f7 100%);
-            border-radius: 8px;
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #7c8bff 0%, #a855f7 55%, #ec4899 100%);
+            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 14px;
+            font-size: 15px;
+            box-shadow: 0 10px 28px rgba(124, 139, 255, 0.28), inset 0 1px 0 rgba(255,255,255,0.28);
         }
 
         .navbar-links {
@@ -149,24 +180,28 @@
         }
 
         .btn-primary {
-            background: var(--text-primary);
-            color: var(--bg);
+            background: linear-gradient(135deg, #f7f7fb 0%, #dfe5ff 100%);
+            color: #090916;
+            box-shadow: 0 14px 34px rgba(124, 139, 255, 0.22), inset 0 1px 0 rgba(255,255,255,0.6);
         }
 
         .btn-primary:hover {
             background: #fff;
-            transform: translateY(-1px);
+            transform: translateY(-2px);
+            box-shadow: 0 18px 42px rgba(124, 139, 255, 0.3), inset 0 1px 0 rgba(255,255,255,0.8);
         }
 
         .btn-secondary {
-            background: var(--bg-elevated);
+            background: rgba(255, 255, 255, 0.07);
             color: var(--text-primary);
             border: 1px solid var(--border);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
         }
 
         .btn-secondary:hover {
-            background: rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.11);
             border-color: var(--border-hover);
+            transform: translateY(-2px);
         }
 
         .btn-ghost {
@@ -187,7 +222,7 @@
         }
 
         .hero {
-            padding: 160px 0 100px;
+            padding: 150px 0 96px;
             position: relative;
             overflow: hidden;
         }
@@ -219,23 +254,205 @@
         .hero-inner {
             position: relative;
             z-index: 1;
-            text-align: center;
-            max-width: 800px;
-            margin: 0 auto;
+            display: grid;
+            grid-template-columns: minmax(0, 0.95fr) minmax(380px, 1.05fr);
+            align-items: center;
+            gap: 64px;
+        }
+
+        .hero-copy {
+            text-align: left;
+        }
+
+        .hero-visual {
+            position: relative;
+            min-height: 520px;
+        }
+
+        .hero-visual::before {
+            content: '';
+            position: absolute;
+            inset: 42px 20px auto auto;
+            width: 360px;
+            height: 360px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, rgba(124,139,255,0.24), rgba(236,72,153,0.16));
+            filter: blur(24px);
+            opacity: 0.9;
+        }
+
+        .product-panel {
+            position: relative;
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: 28px;
+            background: linear-gradient(180deg, rgba(18, 20, 42, 0.88), rgba(8, 8, 20, 0.9));
+            box-shadow: var(--shadow-card), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+            overflow: hidden;
+        }
+
+        .product-topbar {
+            height: 48px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 0 18px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            background: rgba(255,255,255,0.035);
+        }
+
+        .window-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #ff5f57;
+        }
+
+        .window-dot:nth-child(2) { background: #ffbd2e; }
+        .window-dot:nth-child(3) { background: #28c840; }
+
+        .product-body {
+            padding: 22px;
+        }
+
+        .screen-card {
+            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.045);
+            border-radius: 18px;
+            padding: 18px;
+            margin-bottom: 14px;
+        }
+
+        .screen-title-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .screen-kicker {
+            color: var(--text-muted);
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.6px;
+            text-transform: uppercase;
+        }
+
+        .score-badge {
+            padding: 6px 10px;
+            border-radius: var(--radius-pill);
+            background: rgba(50, 213, 131, 0.12);
+            border: 1px solid rgba(50, 213, 131, 0.28);
+            color: #8ff0bc;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .candidate-row {
+            display: grid;
+            grid-template-columns: 38px 1fr auto;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            border-radius: 14px;
+            background: rgba(255,255,255,0.04);
+            margin-top: 10px;
+        }
+
+        .avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #8ea2ff, #ec4899);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            color: #fff;
+        }
+
+        .candidate-name {
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .candidate-desc {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .match-score {
+            font-size: 18px;
+            font-weight: 800;
+            color: #f7f7fb;
+        }
+
+        .metric-bars {
+            display: grid;
+            gap: 12px;
+        }
+
+        .metric-line {
+            display: grid;
+            grid-template-columns: 78px 1fr 38px;
+            align-items: center;
+            gap: 10px;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .bar-track {
+            height: 8px;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.08);
+            overflow: hidden;
+        }
+
+        .bar-fill {
+            height: 100%;
+            border-radius: inherit;
+            background: linear-gradient(90deg, #7c8bff, #a855f7, #ec4899);
+        }
+
+        .floating-chip {
+            position: absolute;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 14px;
+            border-radius: 999px;
+            border: 1px solid rgba(255,255,255,0.16);
+            background: rgba(12, 12, 28, 0.72);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            box-shadow: 0 16px 50px rgba(0,0,0,0.28);
+            color: var(--text-secondary);
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .chip-privacy {
+            right: -10px;
+            top: 64px;
+        }
+
+        .chip-export {
+            left: -20px;
+            bottom: 74px;
         }
 
         .hero-badge {
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            padding: 6px 16px;
-            background: var(--bg-elevated);
-            border: 1px solid var(--border);
+            padding: 7px 16px;
+            background: rgba(255,255,255,0.07);
+            border: 1px solid rgba(255,255,255,0.14);
             border-radius: var(--radius-pill);
             font-size: 13px;
-            font-weight: 500;
+            font-weight: 600;
             color: var(--text-secondary);
             margin-bottom: 28px;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
         }
 
         .hero-badge-dot {
@@ -252,11 +469,12 @@
         }
 
         .hero h1 {
-            font-size: 64px;
+            font-size: clamp(48px, 6vw, 76px);
             font-weight: 800;
-            line-height: 1.1;
-            letter-spacing: -1.5px;
+            line-height: 1.04;
+            letter-spacing: -2.4px;
             margin-bottom: 24px;
+            text-wrap: balance;
         }
 
         .hero h1 .gradient-text {
@@ -268,34 +486,33 @@
 
         .hero-desc {
             font-size: 17px;
-            line-height: 1.8;
+            line-height: 1.9;
             color: var(--text-secondary);
-            margin-bottom: 40px;
-            max-width: 600px;
-            margin-left: auto;
-            margin-right: auto;
+            margin-bottom: 38px;
+            max-width: 620px;
         }
 
         .hero-actions {
             display: flex;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-start;
             gap: 14px;
             flex-wrap: wrap;
         }
 
         .hero-meta {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 32px;
-            margin-top: 56px;
-            padding-top: 40px;
-            border-top: 1px solid var(--border);
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 10px;
+            margin-top: 42px;
         }
 
         .meta-item {
-            text-align: center;
+            text-align: left;
+            padding: 16px;
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.045);
+            border: 1px solid rgba(255, 255, 255, 0.09);
         }
 
         .meta-number {
@@ -312,8 +529,9 @@
         }
 
         .section {
-            padding: 100px 0;
-            border-top: 1px solid var(--border);
+            padding: 108px 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            position: relative;
         }
 
         .section-header {
@@ -353,29 +571,53 @@
         }
 
         .feature-card {
-            background: var(--bg-card);
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.028));
             border: 1px solid var(--border);
             border-radius: var(--radius-lg);
             padding: 32px 28px;
             transition: all 0.3s ease;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 18% 12%, rgba(142,162,255,0.16), transparent 34%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .feature-card > * {
+            position: relative;
+            z-index: 1;
         }
 
         .feature-card:hover {
-            background: var(--bg-elevated);
+            background: rgba(255,255,255,0.07);
             border-color: var(--border-hover);
-            transform: translateY(-2px);
+            transform: translateY(-4px);
+            box-shadow: 0 22px 60px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.09);
+        }
+
+        .feature-card:hover::before {
+            opacity: 1;
         }
 
         .feature-icon {
-            width: 44px;
-            height: 44px;
-            border-radius: 12px;
-            background: var(--accent-soft);
+            width: 48px;
+            height: 48px;
+            border-radius: 15px;
+            background: linear-gradient(135deg, rgba(142,162,255,0.2), rgba(168,85,247,0.14));
+            border: 1px solid rgba(255,255,255,0.09);
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 22px;
-            margin-bottom: 20px;
+            margin-bottom: 22px;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.1);
         }
 
         .feature-title {
@@ -392,7 +634,7 @@
         }
 
         .how-section {
-            background: var(--bg-elevated);
+            background: linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.025));
         }
 
         .steps {
@@ -402,15 +644,18 @@
         }
 
         .step-card {
-            text-align: center;
-            padding: 40px 28px;
+            text-align: left;
+            padding: 34px 28px;
+            border-radius: var(--radius-lg);
+            border: 1px solid rgba(255,255,255,0.09);
+            background: rgba(5, 5, 18, 0.34);
         }
 
         .step-number {
             width: 48px;
             height: 48px;
-            margin: 0 auto 20px;
-            background: var(--text-primary);
+            margin: 0 0 22px;
+            background: linear-gradient(135deg, #f7f7fb, #dfe5ff);
             color: var(--bg);
             border-radius: 16px;
             display: flex;
@@ -418,6 +663,7 @@
             justify-content: center;
             font-size: 20px;
             font-weight: 800;
+            box-shadow: 0 14px 32px rgba(124,139,255,0.18);
         }
 
         .step-title {
@@ -440,12 +686,13 @@
         }
 
         .model-card {
-            background: var(--bg-card);
+            background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.025));
             border: 1px solid var(--border);
             border-radius: var(--radius-md);
             padding: 24px 20px;
             text-align: center;
             transition: all 0.25s ease;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
         }
 
         .model-card:hover {
@@ -471,7 +718,7 @@
         }
 
         .privacy-section {
-            background: var(--bg-elevated);
+            background: linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.018));
         }
 
         .privacy-grid {
@@ -481,15 +728,18 @@
         }
 
         .privacy-card {
-            background: var(--bg-card);
+            background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.025));
             border: 1px solid var(--border);
             border-radius: var(--radius-lg);
             padding: 32px 28px;
             transition: all 0.3s ease;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
         }
 
         .privacy-card:hover {
             border-color: var(--border-hover);
+            transform: translateY(-3px);
+            box-shadow: 0 20px 56px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.08);
         }
 
         .privacy-icon {
@@ -514,6 +764,7 @@
             text-align: center;
             position: relative;
             overflow: hidden;
+            background: radial-gradient(circle at center, rgba(124,139,255,0.08), transparent 46%);
         }
 
         .cta-section::before {
@@ -553,8 +804,9 @@
         }
 
         .footer {
-            border-top: 1px solid var(--border);
+            border-top: 1px solid rgba(255,255,255,0.08);
             padding: 60px 0 32px;
+            background: rgba(0,0,0,0.16);
         }
 
         .footer-top {
@@ -672,8 +924,40 @@
                 padding: 0 24px;
             }
 
+            .hero-inner {
+                grid-template-columns: 1fr;
+                gap: 46px;
+            }
+
+            .hero-copy {
+                text-align: center;
+            }
+
+            .hero-desc {
+                margin-left: auto;
+                margin-right: auto;
+            }
+
+            .hero-actions {
+                justify-content: center;
+            }
+
+            .hero-visual {
+                max-width: 620px;
+                min-height: auto;
+                margin: 0 auto;
+            }
+
+            .chip-privacy {
+                right: 8px;
+            }
+
+            .chip-export {
+                left: 8px;
+            }
+
             .hero h1 {
-                font-size: 48px;
+                font-size: 52px;
             }
 
             .section-title {
@@ -723,8 +1007,8 @@
             }
 
             .hero h1 {
-                font-size: 36px;
-                letter-spacing: -1px;
+                font-size: 39px;
+                letter-spacing: -1.2px;
             }
 
             .hero-desc {
@@ -732,8 +1016,11 @@
             }
 
             .hero-meta {
-                gap: 24px;
-                flex-wrap: wrap;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .meta-item {
+                padding: 14px;
             }
 
             .meta-number {
@@ -787,6 +1074,14 @@
             .btn-lg {
                 width: 100%;
             }
+
+            .hero-visual {
+                display: none;
+            }
+
+            .navbar-cta .btn-ghost {
+                display: none;
+            }
         }
     </style>
 </head>
@@ -807,7 +1102,7 @@
                 <a href="https://zhimacoder.com/" target="_blank" class="btn btn-ghost" style="padding:8px 18px;font-size:13px;">
                     智码玩家 ↗
                 </a>
-                <a href="/app" class="btn btn-primary" style="padding:8px 20px;font-size:13px;">立即使用</a>
+                <a href="server/" class="btn btn-primary" style="padding:8px 20px;font-size:13px;">立即使用</a>
             </div>
         </div>
     </nav>
@@ -815,41 +1110,101 @@
     <section class="hero">
         <div class="container">
             <div class="hero-inner">
-                <div class="hero-badge">
-                    <span class="hero-badge-dot"></span>
-                    <span>智码玩家出品 · 免费开源 · MIT License</span>
+                <div class="hero-copy">
+                    <div class="hero-badge">
+                        <span class="hero-badge-dot"></span>
+                        <span>智码玩家出品 · 免费开源 · MIT License</span>
+                    </div>
+                    <h1>
+                        让AI成为你的<br>
+                        <span class="gradient-text">简历筛选官</span>
+                    </h1>
+                    <p class="hero-desc">
+                        基于大语言模型的智能简历筛选工具。支持云端一键使用，也可完全本地部署。
+                        多模型接入、自动脱敏、智能匹配、Excel 导出，从上传到出结果，三步搞定。
+                    </p>
+                    <div class="hero-actions">
+                        <a href="server/" class="btn btn-primary btn-lg">🚀 云端免费使用</a>
+                        <a href="https://github.com/Zhimacoder/Resume" target="_blank" class="btn btn-secondary btn-lg">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="margin-right:2px;"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                            GitHub
+                        </a>
+                    </div>
+                    <div class="hero-meta">
+                        <div class="meta-item">
+                            <div class="meta-number">7+</div>
+                            <div class="meta-label">支持大模型</div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-number">6+</div>
+                            <div class="meta-label">简历格式</div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-number">MIT</div>
+                            <div class="meta-label">开源协议</div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-number">3步</div>
+                            <div class="meta-label">完成筛选</div>
+                        </div>
+                    </div>
                 </div>
-                <h1>
-                    让AI帮你<br>
-                    <span class="gradient-text">筛选简历</span>
-                </h1>
-                <p class="hero-desc">
-                    基于大语言模型的智能简历筛选工具。支持云端一键使用，也可完全本地部署。
-                    多模型接入、自动脱敏、智能匹配、Excel 导出，从上传到出结果，三步搞定。
-                </p>
-                <div class="hero-actions">
-                    <a href="/app" class="btn btn-primary btn-lg">🚀 云端免费使用</a>
-                    <a href="https://github.com/Zhimacoder/Resume" target="_blank" class="btn btn-secondary btn-lg">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="margin-right:2px;"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
-                        GitHub
-                    </a>
-                </div>
-                <div class="hero-meta">
-                    <div class="meta-item">
-                        <div class="meta-number">7+</div>
-                        <div class="meta-label">支持大模型</div>
-                    </div>
-                    <div class="meta-item">
-                        <div class="meta-number">6+</div>
-                        <div class="meta-label">简历格式</div>
-                    </div>
-                    <div class="meta-item">
-                        <div class="meta-number">MIT</div>
-                        <div class="meta-label">开源协议</div>
-                    </div>
-                    <div class="meta-item">
-                        <div class="meta-number">3步</div>
-                        <div class="meta-label">完成筛选</div>
+                <div class="hero-visual" aria-hidden="true">
+                    <div class="floating-chip chip-privacy">Privacy · 自动脱敏</div>
+                    <div class="floating-chip chip-export">Export · Excel 导出</div>
+                    <div class="product-panel">
+                        <div class="product-topbar">
+                            <span class="window-dot"></span>
+                            <span class="window-dot"></span>
+                            <span class="window-dot"></span>
+                        </div>
+                        <div class="product-body">
+                            <div class="screen-card">
+                                <div class="screen-title-row">
+                                    <span class="screen-kicker">Candidate Ranking</span>
+                                    <span class="score-badge">AI 匹配中</span>
+                                </div>
+                                <div class="candidate-row">
+                                    <div class="avatar">A</div>
+                                    <div>
+                                        <div class="candidate-name">前端工程师候选人</div>
+                                        <div class="candidate-desc">React · TypeScript · 5年经验</div>
+                                    </div>
+                                    <div class="match-score">92</div>
+                                </div>
+                                <div class="candidate-row">
+                                    <div class="avatar">B</div>
+                                    <div>
+                                        <div class="candidate-name">全栈开发候选人</div>
+                                        <div class="candidate-desc">Node.js · Python · 4年经验</div>
+                                    </div>
+                                    <div class="match-score">86</div>
+                                </div>
+                            </div>
+                            <div class="screen-card">
+                                <div class="screen-title-row">
+                                    <span class="screen-kicker">Match Analysis</span>
+                                    <span class="score-badge">完成</span>
+                                </div>
+                                <div class="metric-bars">
+                                    <div class="metric-line">
+                                        <span>技能匹配</span>
+                                        <div class="bar-track"><div class="bar-fill" style="width:92%"></div></div>
+                                        <strong>92%</strong>
+                                    </div>
+                                    <div class="metric-line">
+                                        <span>项目经验</span>
+                                        <div class="bar-track"><div class="bar-fill" style="width:84%"></div></div>
+                                        <strong>84%</strong>
+                                    </div>
+                                    <div class="metric-line">
+                                        <span>岗位契合</span>
+                                        <div class="bar-track"><div class="bar-fill" style="width:88%"></div></div>
+                                        <strong>88%</strong>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -866,6 +1221,13 @@
                 </p>
             </div>
             <div class="features-grid">
+                <div class="feature-card fade-in">
+                    <div class="feature-icon">☁️</div>
+                    <h3 class="feature-title">云端 + 本地双模式</h3>
+                    <p class="feature-desc">
+                        支持云端一键使用，无需部署开箱即用。也可完全本地部署，数据完全自主掌控，满足不同场景需求。
+                    </p>
+                </div>
                 <div class="feature-card fade-in">
                     <div class="feature-icon">🧠</div>
                     <h3 class="feature-title">多模型灵活切换</h3>
@@ -892,13 +1254,6 @@
                     <h3 class="feature-title">智能匹配评分</h3>
                     <p class="feature-desc">
                         基于岗位 JD 深度分析简历匹配度，输出匹配点、不足点及面试问题建议，减少主观偏差。
-                    </p>
-                </div>
-                <div class="feature-card fade-in">
-                    <div class="feature-icon">⚙️</div>
-                    <h3 class="feature-title">自定义匹配维度</h3>
-                    <p class="feature-desc">
-                        支持工作年限、学历要求、技能权重等自定义匹配维度，灵活适配不同岗位筛选标准。
                     </p>
                 </div>
                 <div class="feature-card fade-in">
@@ -1005,31 +1360,31 @@
         <div class="container">
             <div class="section-header fade-in">
                 <span class="section-label">Privacy & Security</span>
-                <h2 class="section-title">数据安全，本地优先</h2>
+                <h2 class="section-title">隐私安全，由你掌控</h2>
                 <p class="section-desc">
-                    我们深知简历数据的敏感性，从架构设计上保障你的数据安全
+                    深知简历数据的敏感性，从架构设计上保障你的数据安全，提供云端和本地两种部署选择
                 </p>
             </div>
             <div class="privacy-grid">
                 <div class="privacy-card fade-in">
-                    <div class="privacy-icon">🏠</div>
-                    <h3 class="privacy-title">本地部署运行</h3>
+                    <div class="privacy-icon">🔓</div>
+                    <h3 class="privacy-title">完全开源透明</h3>
                     <p class="privacy-desc">
-                        工具完全在本地运行，简历数据仅存储在你的电脑上，不会上传至任何第三方服务器，从源头保障数据安全。
+                        项目基于 MIT 协议完全开源，所有代码透明可查。你可以自由部署、修改、分发，没有任何黑箱操作。
                     </p>
                 </div>
                 <div class="privacy-card fade-in">
-                    <div class="privacy-icon">🔐</div>
-                    <h3 class="privacy-title">API Key 加密存储</h3>
+                    <div class="privacy-icon">🏠</div>
+                    <h3 class="privacy-title">可选本地部署</h3>
                     <p class="privacy-desc">
-                        使用 Fernet 对称加密算法存储 API Key，密钥独立保存在本地配置目录，不明文存储、不明文传输。
+                        支持一键本地部署，简历数据完全存储在你自己的服务器或电脑上，不上传任何第三方，从源头保障安全。
                     </p>
                 </div>
                 <div class="privacy-card fade-in">
                     <div class="privacy-icon">🛡️</div>
                     <h3 class="privacy-title">脱敏后再分析</h3>
                     <p class="privacy-desc">
-                        简历内容在发送给大模型前，自动完成敏感信息脱敏处理，只传输必要的工作经历、技能等非隐私信息。
+                        无论云端还是本地，简历内容在发送给大模型前，均自动完成敏感信息脱敏处理，只传输必要的非隐私信息。
                     </p>
                 </div>
             </div>
@@ -1041,9 +1396,14 @@
             <div class="cta-inner fade-in">
                 <h2 class="cta-title">准备好提升招聘效率了吗？</h2>
                 <p class="cta-desc">
-                    立即开始使用智能简历筛选工具，让 AI 帮你从海量简历中快速找到最合适的候选人
+                    云端免费使用，或一键部署到自己的服务器。完全开源，永久免费。
                 </p>
-                <a href="/app" class="btn btn-primary btn-lg">🚀 立即开始使用</a>
+                <div style="display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;">
+                    <a href="server/" class="btn btn-primary btn-lg">🚀 云端免费使用</a>
+                    <a href="https://github.com/Zhimacoder/Resume" target="_blank" class="btn btn-secondary btn-lg">
+                        ⭐ 查看 GitHub
+                    </a>
+                </div>
             </div>
         </div>
     </section>
@@ -1069,15 +1429,15 @@
                         <li><a href="#features">功能特性</a></li>
                         <li><a href="#how">使用流程</a></li>
                         <li><a href="#models">支持模型</a></li>
-                        <li><a href="/app">立即使用</a></li>
+                        <li><a href="server/">立即使用</a></li>
                     </ul>
                 </div>
                 <div class="footer-col">
                     <h4>资源</h4>
                     <ul>
-                        <li><a href="/config">API 配置</a></li>
+                        <li><a href="server/config">API 配置</a></li>
                         <li><a href="#privacy">隐私说明</a></li>
-                        <li><a href="https://github.com" target="_blank">GitHub</a></li>
+                        <li><a href="https://github.com/Zhimacoder/Resume" target="_blank">GitHub 仓库</a></li>
                     </ul>
                 </div>
                 <div class="footer-col">

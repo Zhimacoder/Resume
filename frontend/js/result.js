@@ -22,7 +22,7 @@ function initPage() {
     if (!resultsData || !resultsData.results || resultsData.results.length === 0) {
         Toast.warning('无筛选结果，请重新筛选');
         setTimeout(() => {
-            window.location.href = '/app';
+            window.location.href = '.';
         }, 1500);
         return;
     }
@@ -190,9 +190,9 @@ function renderDetail(item) {
 
 function goHome() {
     sessionStorage.removeItem('screening_results');
-    window.location.href = '/app';
+    window.location.href = '.';
 }
 
 function goConfig() {
-    window.location.href = '/config';
+    window.location.href = 'config';
 }
