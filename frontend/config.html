@@ -195,7 +195,7 @@
     <div class="container" style="max-width: 760px;">
         <!-- 隐私提示 -->
         <div class="alert-banner" style="display:block;background:rgba(108,92,231,0.06);border:1px solid rgba(108,92,231,0.18);color:var(--text-secondary);padding:10px 16px;border-radius:10px;margin-bottom:16px;">
-            🔒 API Key 仅保存在你的浏览器（localStorage），不会上传到服务器。清除浏览器数据或点下方「清除 API Key」按钮即可删除。
+            🔒 API Key 默认保存在用户浏览器本地；执行筛选时，系统会将 JD、简历文件和模型调用所需配置提交到后端处理，后端完成解析、脱敏和模型调用流程。敏感信息会在进入大模型分析前进行脱敏处理，降低隐私泄露风险。
         </div>
 
         <!-- 模型选择 + 配置面板 -->
@@ -396,7 +396,8 @@
         <footer class="app-footer">
             <div class="app-footer-inner">
                 <p class="disclaimer-title">⚠️ 免责声明</p>
-                <p>本工具仅作为简历初筛辅助参考，API Key 仅保存在你的浏览器本地，不会上传至服务器；分析结果由 AI 生成，不构成任何招聘决策依据。请结合人工综合判断做出最终录用决定。</p>
+                <p>本工具仅作为简历初筛辅助参考，分析结果由 AI 生成，不构成任何招聘决策依据。请结合人工综合判断做出最终录用决定。</p>
+                <p style="margin-top:8px;">🔒 隐私说明：API Key 默认保存在用户浏览器本地；执行筛选时，系统会将 JD、简历文件和模型调用所需配置提交到后端处理，后端完成解析、脱敏和模型调用流程。敏感信息会在进入大模型分析前进行脱敏处理，降低隐私泄露风险。</p>
             </div>
         </footer>
     </div>
