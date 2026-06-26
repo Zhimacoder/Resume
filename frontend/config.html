@@ -204,22 +204,12 @@
             <label class="input-label" style="margin-bottom:10px;">选择模型</label>
             <div class="model-tabs" id="model-tabs">
                 <button class="model-tab active" data-model="deepseek">DeepSeek</button>
-                <button class="model-tab" data-model="doubao">字节豆包</button>
-                <button class="model-tab" data-model="wenxin">百度文心</button>
-                <button class="model-tab" data-model="qianwen">阿里千问</button>
-                <button class="model-tab" data-model="zhipu">智谱GLM</button>
-                <button class="model-tab" data-model="minmax">MinMax</button>
                 <button class="model-tab" data-model="custom">自定义</button>
             </div>
 
             <!-- 隐藏的 select（保持与 config.js 兼容） -->
             <select class="input-field" id="current-model-select" style="display:none;">
                 <option value="deepseek">DeepSeek</option>
-                <option value="doubao">字节豆包</option>
-                <option value="wenxin">百度文心</option>
-                <option value="qianwen">阿里千问</option>
-                <option value="zhipu">智谱GLM</option>
-                <option value="minmax">MinMax</option>
                 <option value="custom">自定义模型</option>
             </select>
 
@@ -242,115 +232,6 @@
                 </div>
                 <div class="endpoint-hint">🔗 <code id="deepseek-endpoint-text">https://api.deepseek.com/chat/completions</code></div>
                 <input type="hidden" id="deepseek-endpoint" value="https://api.deepseek.com/chat/completions">
-            </div>
-
-            <!-- ==================== 字节豆包 ==================== -->
-            <div class="model-panel" data-panel="doubao" style="margin-top:20px;">
-                <div class="field-row">
-                    <label class="field-label">API Key<span class="required">*</span></label>
-                    <div class="field-input-group">
-                        <input type="password" class="input-field" id="doubao-key" placeholder="API Key">
-                        <button class="test-btn" onclick="testModel('doubao')">测试连通</button>
-                    </div>
-                    <div class="test-result" id="doubao-test-result"></div>
-                </div>
-                <div class="field-row">
-                    <label class="field-label">模型版本</label>
-                    <select class="version-select" id="doubao-version" disabled>
-                        <option value="">— 请先点击「测试连通」—</option>
-                    </select>
-                    <p class="version-hint" id="doubao-version-hint">填写 API Key 后点击「测试连通」，将自动加载可选模型版本</p>
-                </div>
-                <div class="endpoint-hint">🔗 <code id="doubao-endpoint-text">https://ark.cn-beijing.volces.com/api/v3/chat/completions</code></div>
-                <input type="hidden" id="doubao-endpoint" value="https://ark.cn-beijing.volces.com/api/v3/chat/completions">
-            </div>
-
-            <!-- ==================== 百度文心 ==================== -->
-            <div class="model-panel" data-panel="wenxin" style="margin-top:20px;">
-                <div class="field-row">
-                    <label class="field-label">API Key (AK)<span class="required">*</span></label>
-                    <div class="field-input-group">
-                        <input type="password" class="input-field" id="wenxin-key" placeholder="API Key (AK)">
-                        <button class="test-btn" onclick="testModel('wenxin')">测试连通</button>
-                    </div>
-                    <div class="test-result" id="wenxin-test-result"></div>
-                </div>
-                <div class="field-row">
-                    <label class="field-label">API Secret (SK)<span class="required">*</span></label>
-                    <input type="password" class="input-field" id="wenxin-secret" placeholder="API Secret (SK)">
-                </div>
-                <div class="field-row">
-                    <label class="field-label">模型版本</label>
-                    <select class="version-select" id="wenxin-version" disabled>
-                        <option value="">— 请先点击「测试连通」—</option>
-                    </select>
-                    <p class="version-hint" id="wenxin-version-hint">填写 API Key 后点击「测试连通」，将自动加载可选模型版本</p>
-                </div>
-                <div class="endpoint-hint">🔗 <code id="wenxin-endpoint-text">https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/completions</code></div>
-                <input type="hidden" id="wenxin-endpoint" value="https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/completions">
-            </div>
-
-            <!-- ==================== 阿里千问 ==================== -->
-            <div class="model-panel" data-panel="qianwen" style="margin-top:20px;">
-                <div class="field-row">
-                    <label class="field-label">API Key<span class="required">*</span></label>
-                    <div class="field-input-group">
-                        <input type="password" class="input-field" id="qianwen-key" placeholder="API Key">
-                        <button class="test-btn" onclick="testModel('qianwen')">测试连通</button>
-                    </div>
-                    <div class="test-result" id="qianwen-test-result"></div>
-                </div>
-                <div class="field-row">
-                    <label class="field-label">模型版本</label>
-                    <select class="version-select" id="qianwen-version" disabled>
-                        <option value="">— 请先点击「测试连通」—</option>
-                    </select>
-                    <p class="version-hint" id="qianwen-version-hint">填写 API Key 后点击「测试连通」，将自动加载可选模型版本</p>
-                </div>
-                <div class="endpoint-hint">🔗 <code id="qianwen-endpoint-text">https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions</code></div>
-                <input type="hidden" id="qianwen-endpoint" value="https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions">
-            </div>
-
-            <!-- ==================== 智谱GLM ==================== -->
-            <div class="model-panel" data-panel="zhipu" style="margin-top:20px;">
-                <div class="field-row">
-                    <label class="field-label">API Key<span class="required">*</span></label>
-                    <div class="field-input-group">
-                        <input type="password" class="input-field" id="zhipu-key" placeholder="API Key">
-                        <button class="test-btn" onclick="testModel('zhipu')">测试连通</button>
-                    </div>
-                    <div class="test-result" id="zhipu-test-result"></div>
-                </div>
-                <div class="field-row">
-                    <label class="field-label">模型版本</label>
-                    <select class="version-select" id="zhipu-version" disabled>
-                        <option value="">— 请先点击「测试连通」—</option>
-                    </select>
-                    <p class="version-hint" id="zhipu-version-hint">填写 API Key 后点击「测试连通」，将自动加载可选模型版本</p>
-                </div>
-                <div class="endpoint-hint">🔗 <code id="zhipu-endpoint-text">https://open.bigmodel.cn/api/paas/v4/chat/completions</code></div>
-                <input type="hidden" id="zhipu-endpoint" value="https://open.bigmodel.cn/api/paas/v4/chat/completions">
-            </div>
-
-            <!-- ==================== MinMax ==================== -->
-            <div class="model-panel" data-panel="minmax" style="margin-top:20px;">
-                <div class="field-row">
-                    <label class="field-label">API Key<span class="required">*</span></label>
-                    <div class="field-input-group">
-                        <input type="password" class="input-field" id="minmax-key" placeholder="API Key">
-                        <button class="test-btn" onclick="testModel('minmax')">测试连通</button>
-                    </div>
-                    <div class="test-result" id="minmax-test-result"></div>
-                </div>
-                <div class="field-row">
-                    <label class="field-label">模型版本</label>
-                    <select class="version-select" id="minmax-version" disabled>
-                        <option value="">— 请先点击「测试连通」—</option>
-                    </select>
-                    <p class="version-hint" id="minmax-version-hint">填写 API Key 后点击「测试连通」，将自动加载可选模型版本</p>
-                </div>
-                <div class="endpoint-hint">🔗 <code id="minmax-endpoint-text">https://api.minimax.chat/v1/text/chatcompletion_v2</code></div>
-                <input type="hidden" id="minmax-endpoint" value="https://api.minimax.chat/v1/text/chatcompletion_v2">
             </div>
 
             <!-- ==================== 自定义模型 ==================== -->

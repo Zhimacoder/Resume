@@ -5,11 +5,6 @@
 let configData = null;
 
 const modelFields = {
-    doubao:   { endpoint: 'doubao-endpoint',   key: 'doubao-key',   version: 'doubao-version'   },
-    wenxin:   { endpoint: 'wenxin-endpoint',   key: 'wenxin-key',   secret: 'wenxin-secret', version: 'wenxin-version'   },
-    qianwen:  { endpoint: 'qianwen-endpoint',  key: 'qianwen-key',  version: 'qianwen-version'  },
-    zhipu:    { endpoint: 'zhipu-endpoint',    key: 'zhipu-key',    version: 'zhipu-version'    },
-    minmax:   { endpoint: 'minmax-endpoint',   key: 'minmax-key',   version: 'minmax-version'   },
     deepseek: { endpoint: 'deepseek-endpoint', key: 'deepseek-key', version: 'deepseek-version' },
     custom: {
         name:     'custom-name',
@@ -207,11 +202,6 @@ async function testModel(modelKey) {
         resultEl.textContent = '请先填写 Endpoint';
         return;
     }
-    if (modelKey === 'wenxin' && !apiSecret) {
-        resultEl.className = 'test-result err';
-        resultEl.textContent = '请先填写 API Secret (SK)';
-        return;
-    }
 
     resultEl.className = 'test-result';
     resultEl.textContent = '测试中...';
@@ -289,7 +279,6 @@ async function saveConfig() {
 
     if (!apiKey)    { Toast.warning('请输入 API Key'); return; }
     if (!endpoint)  { Toast.warning('请输入 API Endpoint'); return; }
-    if (currentModel === 'wenxin' && !apiSecret) { Toast.warning('请输入 API Secret (SK)'); return; }
     if (currentModel === 'custom' && !modelName) { Toast.warning('请输入自定义模型名称'); return; }
 
     showLoading('正在保存...');
@@ -343,8 +332,7 @@ function clearUserApiKey() {
 }
 
 function getModelDisplayName(key) {
-    return { doubao:'字节豆包', wenxin:'百度文心', qianwen:'阿里千问',
-             zhipu:'智谱GLM', minmax:'MinMax', deepseek:'DeepSeek' }[key] || key;
+    return { deepseek:'DeepSeek' }[key] || key;
 }
 
 function goHome() {

@@ -42,7 +42,6 @@ function _isUserConfigValid(config) {
     const model = (config.models || {})[currentModel];
     if (!model) return false;
     if (!model.api_key || !model.endpoint) return false;
-    if (currentModel === 'wenxin' && !model.api_secret) return false;
     return true;
 }
 
