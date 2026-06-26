@@ -12,8 +12,46 @@ document.addEventListener('DOMContentLoaded', async function() {
 });
 
 function initPage() {
+    initAgeSelects();
     updateAlertBanner();
     restoreFromCache();
+    updateResultBanner();
+}
+
+const AGE_OPTIONS = [
+    { value: '', label: '不限' },
+    { value: '18', label: '18岁' },
+    { value: '20', label: '20岁' },
+    { value: '22', label: '22岁' },
+    { value: '23', label: '23岁' },
+    { value: '25', label: '25岁' },
+    { value: '28', label: '28岁' },
+    { value: '30', label: '30岁' },
+    { value: '32', label: '32岁' },
+    { value: '35', label: '35岁' },
+    { value: '38', label: '38岁' },
+    { value: '40', label: '40岁' },
+    { value: '45', label: '45岁' },
+    { value: '50', label: '50岁' },
+    { value: '55', label: '55岁' },
+    { value: '60', label: '60岁' }
+];
+
+function initAgeSelects() {
+    const minSelect = document.getElementById('dim-age-min');
+    const maxSelect = document.getElementById('dim-age-max');
+    minSelect.innerHTML = '';
+    maxSelect.innerHTML = '';
+    AGE_OPTIONS.forEach(opt => {
+        const o1 = document.createElement('option');
+        o1.value = opt.value;
+        o1.textContent = opt.value ? opt.label : '最小年龄（不限）';
+        minSelect.appendChild(o1);
+        const o2 = document.createElement('option');
+        o2.value = opt.value;
+        o2.textContent = opt.value ? opt.label : '最大年龄（不限）';
+        maxSelect.appendChild(o2);
+    });
 }
 
 function restoreFromCache() {
@@ -40,6 +78,20 @@ function restoreFromCache() {
         });
         renderFileList();
     }
+
+    const savedDimensions = CacheManager.getDimensions();
+    if (savedDimensions) {
+        if (savedDimensions.work_years) document.getElementById('dim-work-years').value = savedDimensions.work_years;
+        if (savedDimensions.education) document.getElementById('dim-education').value = savedDimensions.education;
+        if (savedDimensions.skill_weights) document.getElementById('dim-skill-weights').value = savedDimensions.skill_weights;
+        if (savedDimensions.extra) document.getElementById('dim-extra').value = savedDimensions.extra;
+        if (savedDimensions.age_min !== undefined && savedDimensions.age_min !== null) {
+            document.getElementById('dim-age-min').value = String(savedDimensions.age_min);
+        }
+        if (savedDimensions.age_max !== undefined && savedDimensions.age_max !== null) {
+            document.getElementById('dim-age-max').value = String(savedDimensions.age_max);
+        }
+    }
 }
 
 function bindEvents() {
@@ -53,6 +105,15 @@ function bindEvents() {
 
     document.getElementById('btn-clear').addEventListener('click', clearContent);
 
+    document.getElementById('btn-view-result').addEventListener('click', function() {
+        window.location.href = 'result';
+    });
+
+    document.getElementById('btn-dismiss-result').addEventListener('click', function() {
+        CacheManager.dismissResultBanner();
+        updateResultBanner();
+    });
+
     initUploadArea();
 
     document.getElementById('btn-toggle-dimensions').addEventListener('click', function() {
@@ -65,6 +126,28 @@ function bindEvents() {
     document.getElementById('jd-input').addEventListener('input', function() {
         CacheManager.saveJD(this.value);
     });
+
+    ['dim-work-years', 'dim-education', 'dim-skill-weights', 'dim-extra'].forEach(function(id) {
+        document.getElementById(id).addEventListener('input', saveDimensionsToCache);
+    });
+
+    document.getElementById('dim-age-min').addEventListener('change', function() {
+        validateAgeRange();
+        saveDimensionsToCache();
+    });
+    document.getElementById('dim-age-max').addEventListener('change', function() {
+        validateAgeRange();
+        saveDimensionsToCache();
+    });
+}
+
+function validateAgeRange() {
+    const minVal = document.getElementById('dim-age-min').value;
+    const maxVal = document.getElementById('dim-age-max').value;
+    if (minVal && maxVal && parseInt(minVal) > parseInt(maxVal)) {
+        Toast.warning('最小年龄不能大于最大年龄');
+        document.getElementById('dim-age-max').value = '';
+    }
 }
 
 function initUploadArea() {
@@ -198,10 +281,32 @@ function clearContent() {
     if (!confirm('确定要清空所有内容吗？')) return;
 
     document.getElementById('jd-input').value = '';
+    document.getElementById('dim-work-years').value = '';
+    document.getElementById('dim-education').value = '';
+    document.getElementById('dim-skill-weights').value = '';
+    document.getElementById('dim-extra').value = '';
+    document.getElementById('dim-age-min').value = '';
+    document.getElementById('dim-age-max').value = '';
     uploadedFiles = [];
     renderFileList();
-    CacheManager.clearCache();
+    CacheManager.clearAll();
+    updateResultBanner();
     Toast.info('已清空所有内容');
+}
+
+function saveDimensionsToCache() {
+    const ageMinVal = document.getElementById('dim-age-min').value;
+    const ageMaxVal = document.getElementById('dim-age-max').value;
+    const dimensions = {
+        work_years: document.getElementById('dim-work-years').value.trim(),
+        education: document.getElementById('dim-education').value.trim(),
+        skill_weights: document.getElementById('dim-skill-weights').value.trim(),
+        extra: document.getElementById('dim-extra').value.trim(),
+        age_min: ageMinVal ? parseInt(ageMinVal) : null,
+        age_max: ageMaxVal ? parseInt(ageMaxVal) : null
+    };
+    const hasAny = dimensions.work_years || dimensions.education || dimensions.skill_weights || dimensions.extra || dimensions.age_min || dimensions.age_max;
+    CacheManager.saveDimensions(hasAny ? dimensions : null);
 }
 
 async function handleScreening() {
@@ -226,11 +331,17 @@ async function handleScreening() {
     const education = document.getElementById('dim-education').value.trim();
     const skillWeights = document.getElementById('dim-skill-weights').value.trim();
     const extra = document.getElementById('dim-extra').value.trim();
-    const dimensions = (workYears || education || skillWeights || extra) ? {
+    const ageMinVal = document.getElementById('dim-age-min').value;
+    const ageMaxVal = document.getElementById('dim-age-max').value;
+    const ageMin = ageMinVal ? parseInt(ageMinVal) : null;
+    const ageMax = ageMaxVal ? parseInt(ageMaxVal) : null;
+    const dimensions = (workYears || education || skillWeights || extra || ageMin || ageMax) ? {
         work_years: workYears,
         education: education,
         skill_weights: skillWeights,
-        extra: extra
+        extra: extra,
+        age_min: ageMin,
+        age_max: ageMax
     } : null;
 
     const files = uploadedFiles.map(f => {
@@ -256,8 +367,8 @@ async function handleScreening() {
         const response = await API.screening(jdContent, files, dimensions);
 
         if (response.success) {
-            sessionStorage.setItem('screening_results', JSON.stringify(response));
-            CacheManager.clearCache();
+            CacheManager.saveResults(response);
+            CacheManager.saveDimensions(dimensions);
             window.location.href = 'result';
         } else {
             Toast.error('筛选失败: ' + (response.detail || '未知错误'));
@@ -296,8 +407,22 @@ function updateAlertBanner() {
     }
 }
 
+function updateResultBanner() {
+    const banner = document.getElementById('result-banner');
+    const countEl = document.getElementById('result-count');
+
+    if (CacheManager.hasResults() && !CacheManager.isResultBannerDismissed()) {
+        const results = CacheManager.getResults();
+        countEl.textContent = results.results.length;
+        banner.classList.remove('hidden');
+    } else {
+        banner.classList.add('hidden');
+    }
+}
+
 function goToConfig() {
     saveToCache();
+    saveDimensionsToCache();
     window.location.href = 'config';
 }
 

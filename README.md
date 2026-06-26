@@ -16,31 +16,43 @@
 
 ```
 Resume_screening/
-├── backend/                 # 后端服务（FastAPI）
-│   ├── main.py             # 主入口，API 路由
-│   ├── config.py           # 配置管理（加密存储）
-│   ├── llm.py              # 大模型调用与解析
-│   ├── parser.py           # 简历文档解析
-│   ├── ocr.py              # 图片 OCR 识别
-│   ├── desensitizer.py     # 敏感信息脱敏
-│   ├── logger_config.py    # 日志配置
-│   ├── requirements.txt    # Python 依赖
-│   └── tests/              # 单元测试
-├── frontend/                # 前端页面
-│   ├── index.html          # 主页（上传简历、输入JD）
-│   ├── result.html         # 结果页（筛选结果展示）
-│   ├── config.html         # 配置页（模型配置）
-│   ├── css/style.css       # 样式
-│   └── js/                 # JavaScript 模块
-│       ├── state.js        # 全局状态管理
-│       ├── cache.js        # 本地缓存管理
-│       ├── api.js          # API 封装
-│       ├── toast.js        # Toast 提示组件
-│       ├── index.js        # 主页逻辑
-│       ├── result.js       # 结果页逻辑
-│       └── config.js       # 配置页逻辑
-├── start.sh                # 启动脚本
-└── .gitignore              # Git 忽略配置
+├── website/                    # 官网页（产品介绍）
+│   └── index.html
+├── server/                     # 后端服务（FastAPI）
+│   ├── main.py                # 主入口，API 路由
+│   ├── config.py              # 配置管理（加密存储）
+│   ├── llm.py                 # 大模型调用与解析
+│   ├── parser.py              # 简历文档解析
+│   ├── ocr.py                 # 图片 OCR 识别
+│   ├── desensitizer.py        # 敏感信息脱敏
+│   ├── logger_config.py       # 日志配置
+│   └── requirements.txt       # Python 依赖
+├── frontend/                   # 业务前端页面
+│   ├── index.html             # 主页（上传简历、输入JD）
+│   ├── result.html            # 结果页（筛选结果展示）
+│   ├── config.html            # 配置页（模型配置）
+│   ├── css/style.css          # 样式
+│   ├── js/                    # JavaScript 模块
+│   └── favicon.svg
+├── tests/                      # 测试
+│   └── unit/                   # 单元测试
+│       ├── test_llm_parse.py
+│       ├── test_desensitizer.py
+│       └── test_config.py
+├── deploy/                     # 部署与运维
+│   ├── DEPLOY_SOP.md          # 部署操作规程
+│   ├── Dockerfile
+│   ├── docker-compose.yml     # 生产编排
+│   ├── docker-compose.dev.yml # 本地开发编排
+│   ├── nginx/nginx-resume.conf
+│   ├── scripts/
+│   │   ├── start.sh           # 启动/停止/健康检查
+│   │   └── deploy.sh          # 生产部署脚本
+│   └── envs/.env.example      # 环境变量模板
+├── config/                     # 运行时配置（已 gitignore）
+├── logs/                       # 运行时日志（已 gitignore）
+├── docs/                       # 内部文档（已 gitignore）
+└── README.md
 ```
 
 ## 快速开始
@@ -53,7 +65,7 @@ Resume_screening/
 ### 安装依赖
 
 ```bash
-cd backend
+cd server
 pip install -r requirements.txt
 ```
 
@@ -62,14 +74,13 @@ pip install -r requirements.txt
 #### 方式一：使用启动脚本
 
 ```bash
-chmod +x start.sh
-./start.sh
+bash deploy/scripts/start.sh start
 ```
 
 #### 方式二：手动启动
 
 ```bash
-cd backend
+cd server
 uvicorn main:app --host 0.0.0.0 --port 8000
 ```
 
@@ -94,21 +105,21 @@ uvicorn main:app --host 0.0.0.0 --port 8000
 | POST | `/api/test-connection` | 测试模型连通性 |
 | POST | `/api/parse-resume` | 解析单份简历（预览） |
 | POST | `/api/screening` | 批量简历筛选 |
-| POST | `/api/export-excel` | 导出 Excel |
+| POST | `/api/export` | 导出 Excel |
 
 ## 运行测试
 
 ```bash
-cd backend
+cd server
 pip install pytest
-pytest tests/ -v
+python -m pytest ../tests/unit/ -v
 ```
 
 ## 技术栈
 
 - **后端**：FastAPI + uvicorn
-- **文档解析**：pdfplumber / python-docx / striprtf
-- **图片 OCR**：PaddleOCR
+- **文档解析**：PyPDF2 / python-docx / antiword / striprtf
+- **图片 OCR**：pytesseract（Tesseract OCR，支持 chi_sim + eng）
 - **加密存储**：cryptography (Fernet)
 - **前端**：原生 HTML + CSS + JavaScript
 - **导出**：openpyxl (Excel)

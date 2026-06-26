@@ -4,7 +4,7 @@ LLM 模块单元测试（JSON 解析部分）
 
 import sys
 import os
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'server'))
 
 import pytest
 from llm import LLMCaller

@@ -85,9 +85,9 @@ body::after {
 
 /* ==================== 布局 ==================== */
 .container {
-    max-width: 1240px;
+    max-width: 1280px;
     margin: 0 auto;
-    padding: 32px 24px 48px;
+    padding: 24px 24px 40px;
 }
 
 /* ==================== 页面头部 ==================== */
@@ -430,6 +430,56 @@ select.input-field {
 .alert-banner .btn:hover {
     background: #fffdf5;
     border-color: rgba(253, 203, 110, 0.7);
+}
+
+/* ==================== 结果入口通栏 ==================== */
+.result-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+    background: linear-gradient(135deg, #e6f7ff, #e6fffb);
+    border: 1px solid rgba(22, 119, 255, 0.2);
+    color: #0958d9;
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: var(--radius-md);
+    margin-bottom: 20px;
+    gap: 12px;
+    box-shadow: 0 2px 8px rgba(22, 119, 255, 0.08);
+}
+.result-banner .btn-primary-sm {
+    background: #1677ff;
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    font-family: inherit;
+    transition: background 0.18s;
+}
+.result-banner .btn-primary-sm:hover {
+    background: #0958d9;
+}
+.result-banner .banner-close {
+    background: none;
+    border: none;
+    color: #0958d9;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 4px 6px;
+    opacity: 0.6;
+    font-family: inherit;
+    line-height: 1;
+    border-radius: 4px;
+    transition: opacity 0.18s;
+}
+.result-banner .banner-close:hover {
+    opacity: 1;
+    background: rgba(22, 119, 255, 0.08);
 }
 
 /* ==================== 弹框 ==================== */
@@ -887,6 +937,8 @@ select.input-field {
     color: #4a3f8a;
     border: 1px solid rgba(108, 92, 231, 0.15);
     counter-increment: question-counter;
+    padding-top: 9px;
+    padding-bottom: 9px;
 }
 
 .list-question li::before {
@@ -901,7 +953,7 @@ select.input-field {
     display: flex;
     align-items: center;
     justify-content: center;
-    top: 10px;
+    top: 9px;
 }
 
 .list-question {
@@ -1009,10 +1061,239 @@ select.input-field {
     margin-bottom: 20px;
 }
 
+/* ==================== 结果页 - 紧凑信息密度优化 ==================== */
+.result-page .container {
+    max-width: none;
+    width: min(1680px, calc(100vw - 80px));
+    padding: 28px 0 36px;
+}
+
+.result-layout {
+    display: grid;
+    grid-template-columns: 250px minmax(0, 1fr);
+    gap: 16px;
+    align-items: start;
+}
+
+.result-sidebar {
+    width: auto;
+    border-radius: 18px;
+    top: 82px;
+    box-shadow: 0 10px 30px rgba(45,52,54,0.08);
+}
+
+.result-sidebar .header {
+    padding: 11px 14px;
+    font-size: 12px;
+}
+
+.result-list {
+    max-height: calc(100vh - 138px);
+}
+
+.result-item {
+    padding: 9px 12px;
+    min-height: 50px;
+    gap: 8px;
+}
+
+.result-item.active {
+    padding-left: 9px;
+}
+
+.result-item .name {
+    font-size: 12px;
+    line-height: 1.35;
+}
+
+.result-item .score {
+    font-size: 11px;
+    padding: 4px 9px;
+}
+
+.result-detail {
+    padding: 18px;
+    border-radius: 18px;
+    max-height: calc(100vh - 100px);
+    box-shadow: 0 10px 30px rgba(45,52,54,0.08);
+}
+
+.detail-top {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 150px;
+    gap: 12px;
+    align-items: stretch;
+    margin-bottom: 12px;
+}
+
+.detail-title-block {
+    min-width: 0;
+    padding: 14px 16px;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: linear-gradient(135deg, #fff, #fafafe);
+}
+
+.detail-resume-name {
+    margin: 0 0 8px;
+    padding: 0;
+    border: none;
+    font-size: 18px;
+    line-height: 1.25;
+}
+
+.file-mark {
+    width: 28px;
+    height: 28px;
+    border-radius: 9px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-subtle);
+    font-size: 15px;
+    flex-shrink: 0;
+}
+
+.detail-summary-inline {
+    color: var(--text-secondary);
+    line-height: 1.58;
+    font-size: 13px;
+}
+
+.score-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 14px;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: linear-gradient(160deg, rgba(108,92,231,0.06), #fff);
+}
+
+.score-card-high {
+    border-color: rgba(16,185,129,0.22);
+    background: linear-gradient(160deg, rgba(16,185,129,0.08), #fff 62%);
+}
+
+.score-card-mid {
+    border-color: rgba(245,158,11,0.22);
+    background: linear-gradient(160deg, rgba(245,158,11,0.08), #fff 62%);
+}
+
+.score-card-low {
+    border-color: rgba(239,68,68,0.22);
+    background: linear-gradient(160deg, rgba(239,68,68,0.08), #fff 62%);
+}
+
+.score-value {
+    font-size: 40px;
+    font-weight: 800;
+    line-height: 1;
+    -webkit-text-fill-color: transparent;
+}
+
+.score-label {
+    margin: 4px 0 10px;
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.score-bar-wrap.compact {
+    height: 6px;
+    flex: none;
+}
+
+.detail-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 0.92fr);
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.detail-section {
+    margin-bottom: 0;
+    padding: 13px;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: #fff;
+}
+
+.detail-section .title {
+    margin-bottom: 9px;
+    color: var(--text-primary);
+    font-size: 13px;
+    letter-spacing: 0;
+    text-transform: none;
+}
+
+.detail-section .title-icon {
+    width: 21px;
+    height: 21px;
+    border-radius: 7px;
+    font-weight: 800;
+}
+
+.title-icon-match {
+    color: #008b72;
+    background: var(--success-light);
+}
+
+.title-icon-gap {
+    color: #b7523c;
+    background: var(--danger-light);
+}
+
+.title-icon-question {
+    color: var(--primary);
+    background: var(--primary-light);
+}
+
+.section-count {
+    margin-left: auto;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: var(--bg-subtle);
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.detail-section .content {
+    font-size: 13px;
+    line-height: 1.58;
+}
+
+.detail-section ul {
+    gap: 6px;
+}
+
+.detail-section li {
+    padding: 7px 9px 7px 30px;
+    font-size: 12px;
+    line-height: 1.48;
+    border-radius: 9px;
+}
+
+.detail-section li::before {
+    left: 10px;
+    top: 7px;
+}
+
+.question-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 7px !important;
+}
+
+.section-questions {
+    margin-top: 0;
+}
+
 /* ==================== 响应式 ==================== */
 @media (max-width: 900px) {
     .result-layout {
-        flex-direction: column;
+        grid-template-columns: 1fr;
     }
 
     .result-sidebar {
@@ -1021,11 +1302,20 @@ select.input-field {
     }
 
     .result-list {
-        max-height: 240px;
+        max-height: 220px;
     }
 
     .result-detail {
         max-height: none;
+    }
+
+    .detail-top,
+    .detail-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .question-grid {
+        grid-template-columns: 1fr;
     }
 }
 
@@ -1174,4 +1464,121 @@ select.input-field {
         min-width: auto;
         max-width: none;
     }
+}
+
+/* ==================== 页脚免责声明 ==================== */
+.app-footer {
+    margin-top: 48px;
+    padding: 20px 24px;
+    text-align: center;
+    border-top: 1px solid var(--border);
+}
+
+.app-footer-inner {
+    max-width: 680px;
+    margin: 0 auto;
+}
+
+.app-footer p {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.8;
+    margin: 0;
+}
+
+.app-footer .disclaimer-title {
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+}
+
+/* 面试问题带考察能力 */
+.question-item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.question-text {
+    font-weight: 600;
+    color: #4a3f8a;
+    line-height: 1.5;
+}
+
+.question-focus {
+    font-size: 11px;
+    color: #7c6fd4;
+    background: rgba(108, 92, 231, 0.08);
+    padding: 4px 10px;
+    border-radius: 6px;
+    line-height: 1.5;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    width: fit-content;
+}
+
+.question-focus::before {
+    content: '🎯';
+    font-size: 11px;
+}
+
+/* 年龄标签 */
+.result-item .name-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.result-item .name-row .name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+}
+
+.age-tag {
+    display: inline-flex;
+    align-items: center;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 1px 7px;
+    border-radius: 10px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    line-height: 1.6;
+}
+
+.age-tag.age-match {
+    background: rgba(16, 185, 129, 0.12);
+    color: #059669;
+    border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+.age-tag.age-mismatch {
+    background: rgba(239, 68, 68, 0.1);
+    color: #dc2626;
+    border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+.age-tag.age-unknown {
+    background: rgba(245, 158, 11, 0.1);
+    color: #d97706;
+    border: 1px solid rgba(245, 158, 11, 0.25);
+}
+
+.age-tag.age-neutral {
+    background: var(--bg-subtle);
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+}
+
+.detail-resume-name {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
 }

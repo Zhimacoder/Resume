@@ -4,20 +4,94 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <base href="/resume/server/">
-    <title>API配置 - 智能简历筛选工具</title>
+    <title>我的 API Key - 智能简历筛选工具</title>
     <link rel="icon" type="image/svg+xml" href="static/favicon.svg">
     <link rel="stylesheet" href="static/css/style.css">
     <style>
+        /* ---- 模型选择 Tab ---- */
+        .model-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            padding: 6px;
+            background: var(--bg-subtle);
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+        }
+        .model-tab {
+            padding: 8px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            border: none;
+            background: transparent;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.18s ease;
+            white-space: nowrap;
+            font-family: inherit;
+        }
+        .model-tab:hover {
+            color: var(--text-primary);
+            background: rgba(255,255,255,0.6);
+        }
+        .model-tab.active {
+            background: #fff;
+            color: var(--primary);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+
+        /* ---- 模型配置面板 ---- */
+        .model-panel {
+            display: none;
+        }
+        .model-panel.active {
+            display: block;
+            animation: fadeIn 0.2s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ---- 字段行 ---- */
+        .field-row {
+            margin-bottom: 18px;
+        }
+        .field-row:last-child { margin-bottom: 0; }
+
+        .field-label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        .field-label .required {
+            color: var(--danger);
+            margin-left: 2px;
+        }
+
+        .field-input-group {
+            display: flex;
+            gap: 10px;
+            align-items: stretch;
+        }
+        .field-input-group .input-field {
+            flex: 1;
+        }
+
+        /* ---- 测试按钮 ---- */
         .test-btn {
-            padding: 8px 14px;
-            font-size: 12px;
-            border-radius: 999px;
-            border: 1px solid var(--border, #e9ebf0);
+            padding: 0 18px;
+            font-size: 13px;
+            font-weight: 600;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
             cursor: pointer;
             background: #fff;
-            color: var(--primary, #6c5ce7);
-            font-weight: 600;
-            transition: all 0.2s;
+            color: var(--primary);
+            transition: all 0.18s;
             white-space: nowrap;
             flex-shrink: 0;
             box-shadow: 0 1px 2px rgba(0,0,0,0.02);
@@ -25,10 +99,6 @@
         .test-btn:hover:not(:disabled) {
             background: rgba(108,92,231,0.06);
             border-color: rgba(108,92,231,0.3);
-            transform: translateY(-1px);
-        }
-        .test-btn:active:not(:disabled) {
-            transform: translateY(0);
         }
         .test-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
@@ -41,73 +111,72 @@
         .test-result.ok  { color: #10b981; font-weight: 500; }
         .test-result.err { color: #ef4444; font-weight: 500; }
 
-        /* 模型版本行 */
-        .model-version-row {
-            margin-top: 10px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .model-version-row .ver-label {
-            width: 110px;
-            flex-shrink: 0;
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--text-secondary, #6b7280);
-        }
-
-        /* 模型版本下拉 */
+        /* ---- 版本选择 ---- */
         .version-select {
-            flex: 1;
-            max-width: 320px;
-            padding: 10px 36px 10px 12px;
-            font-size: 13px;
-            color: var(--text-primary, #2d3436);
-            border: 1.5px solid var(--border, #e9ebf0);
-            border-radius: 12px;
+            width: 100%;
+            max-width: 420px;
+            padding: 11px 36px 11px 14px;
+            font-size: 14px;
+            color: var(--text-primary);
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-sm);
             background: #fff;
             cursor: pointer;
             appearance: none;
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23636e72' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
             background-repeat: no-repeat;
-            background-position: right 12px center;
+            background-position: right 14px center;
             transition: border-color 0.18s, box-shadow 0.18s;
+            font-family: inherit;
         }
         .version-select:focus {
             outline: none;
-            border-color: var(--primary, #6c5ce7);
+            border-color: var(--primary);
             box-shadow: 0 0 0 4px rgba(108,92,231,0.1);
         }
-        /* 未解锁：禁用态 */
         .version-select:disabled {
-            background-color: var(--bg-subtle, #f6f7fb);
-            color: var(--text-muted, #b2bec3);
+            background-color: var(--bg-subtle);
+            color: var(--text-muted);
             cursor: not-allowed;
-            opacity: 1;
-            border-color: var(--border, #e9ebf0);
+            border-color: var(--border);
         }
-
-        hr {
-            border: none;
-            border-top: 1px solid var(--border, #e9ebf0) !important;
-        }
-        /* 解锁后加载中提示 */
-        .version-select.loading {
-            color: var(--text-muted, #b2bec3);
-        }
-
-        /* 提示文字 */
         .version-hint {
             font-size: 11px;
-            color: var(--text-muted, #b2bec3);
-            margin-top: 4px;
-            margin-left: 122px;
+            color: var(--text-muted);
+            margin-top: 5px;
         }
 
-        @media (max-width: 640px) {
-            .version-hint {
-                margin-left: 0;
-            }
+        /* ---- Endpoint 小字提示 ---- */
+        .endpoint-hint {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 10px;
+            padding: 5px 10px;
+            background: var(--bg-subtle);
+            border-radius: 8px;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .endpoint-hint code {
+            font-family: "SF Mono", "Fira Code", monospace;
+            font-size: 11px;
+            color: var(--text-secondary);
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* ---- 保存按钮区 ---- */
+        .save-bar {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            padding: 20px 0;
         }
     </style>
 </head>
@@ -116,205 +185,220 @@
     <header class="page-header">
         <div class="page-header-left">
             <div class="page-header-logo">⚙️</div>
-            <h1 class="page-title">API 配置</h1>
+            <h1 class="page-title">我的 API Key</h1>
         </div>
         <div class="page-header-actions">
             <button class="btn btn-secondary" id="btn-home">← 返回主页</button>
         </div>
     </header>
 
-    <div class="container">
-        <!-- 当前使用模型 -->
-        <div class="card mt-20">
-            <div class="input-group" style="margin-bottom:0;">
-                <label class="input-label">当前使用模型</label>
-                <select class="input-field" id="current-model-select" style="max-width: 380px;">
-                    <option value="doubao">字节豆包</option>
-                    <option value="wenxin">百度文心</option>
-                    <option value="qianwen">阿里千问</option>
-                    <option value="zhipu">智谱GLM</option>
-                    <option value="minmax">MinMax</option>
-                    <option value="deepseek">DeepSeek</option>
-                    <option value="custom">自定义模型</option>
-                </select>
-            </div>
+    <div class="container" style="max-width: 760px;">
+        <!-- 隐私提示 -->
+        <div class="alert-banner" style="display:block;background:rgba(108,92,231,0.06);border:1px solid rgba(108,92,231,0.18);color:var(--text-secondary);padding:10px 16px;border-radius:10px;margin-bottom:16px;">
+            🔒 API Key 仅保存在你的浏览器（localStorage），不会上传到服务器。清除浏览器数据或点下方「清除 API Key」按钮即可删除。
         </div>
 
-        <!-- 主流大模型配置 -->
-        <div class="config-section mt-20">
-            <div class="header">主流大模型配置</div>
-            <div class="body">
+        <!-- 模型选择 + 配置面板 -->
+        <div class="card mt-20" style="padding:22px;">
+            <!-- 模型选择 Tab -->
+            <label class="input-label" style="margin-bottom:10px;">选择模型</label>
+            <div class="model-tabs" id="model-tabs">
+                <button class="model-tab active" data-model="deepseek">DeepSeek</button>
+                <button class="model-tab" data-model="doubao">字节豆包</button>
+                <button class="model-tab" data-model="wenxin">百度文心</button>
+                <button class="model-tab" data-model="qianwen">阿里千问</button>
+                <button class="model-tab" data-model="zhipu">智谱GLM</button>
+                <button class="model-tab" data-model="minmax">MinMax</button>
+                <button class="model-tab" data-model="custom">自定义</button>
+            </div>
 
-                <!-- 字节豆包 -->
-                <div class="model-row">
-                    <span class="model-name">字节豆包</span>
-                    <input type="text" class="input-field" id="doubao-endpoint"
-                           value="https://ark.cn-beijing.volces.com/api/v3/chat/completions" readonly>
-                    <input type="password" class="input-field" id="doubao-key"
-                           placeholder="API Key" style="margin-left:12px;max-width:300px;">
-                    <button class="test-btn" style="margin-left:10px;" onclick="testModel('doubao')">测试连通</button>
-                </div>
-                <div class="model-version-row">
-                    <span class="ver-label">模型版本</span>
-                    <select class="version-select" id="doubao-version" disabled>
-                        <option value="">— 请先点击「测试连通」—</option>
-                    </select>
-                </div>
-                <p class="version-hint" id="doubao-version-hint">填写 API Key 后点击「测试连通」，将自动加载可选模型版本</p>
-                <div class="test-result" id="doubao-test-result"></div>
+            <!-- 隐藏的 select（保持与 config.js 兼容） -->
+            <select class="input-field" id="current-model-select" style="display:none;">
+                <option value="deepseek">DeepSeek</option>
+                <option value="doubao">字节豆包</option>
+                <option value="wenxin">百度文心</option>
+                <option value="qianwen">阿里千问</option>
+                <option value="zhipu">智谱GLM</option>
+                <option value="minmax">MinMax</option>
+                <option value="custom">自定义模型</option>
+            </select>
 
-                <hr style="border:none;border-top:1px solid #f0f0f0;margin:16px 0;">
-
-                <!-- 百度文心 -->
-                <div class="model-row">
-                    <span class="model-name">百度文心</span>
-                    <input type="text" class="input-field" id="wenxin-endpoint"
-                           value="https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/completions" readonly>
-                    <input type="password" class="input-field" id="wenxin-key"
-                           placeholder="API Key (AK)" style="margin-left:12px;max-width:300px;">
-                    <button class="test-btn" style="margin-left:10px;" onclick="testModel('wenxin')">测试连通</button>
+            <!-- ==================== DeepSeek ==================== -->
+            <div class="model-panel active" data-panel="deepseek" style="margin-top:20px;">
+                <div class="field-row">
+                    <label class="field-label">API Key<span class="required">*</span></label>
+                    <div class="field-input-group">
+                        <input type="password" class="input-field" id="deepseek-key" placeholder="sk-...">
+                        <button class="test-btn" onclick="testModel('deepseek')">测试连通</button>
+                    </div>
+                    <div class="test-result" id="deepseek-test-result"></div>
                 </div>
-                <div class="model-row">
-                    <span class="model-name" style="visibility:hidden;">百度文心Secret</span>
-                    <input type="password" class="input-field" id="wenxin-secret"
-                           placeholder="API Secret (SK)" style="max-width:300px;">
-                    <span style="flex:1;"></span>
-                </div>
-                <div class="model-version-row">
-                    <span class="ver-label">模型版本</span>
-                    <select class="version-select" id="wenxin-version" disabled>
-                        <option value="">— 请先点击「测试连通」—</option>
-                    </select>
-                </div>
-                <p class="version-hint" id="wenxin-version-hint">填写 API Key 后点击「测试连通」，将自动加载可选模型版本</p>
-                <div class="test-result" id="wenxin-test-result"></div>
-
-                <hr style="border:none;border-top:1px solid #f0f0f0;margin:16px 0;">
-
-                <!-- 阿里千问 -->
-                <div class="model-row">
-                    <span class="model-name">阿里千问</span>
-                    <input type="text" class="input-field" id="qianwen-endpoint"
-                           value="https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions" readonly>
-                    <input type="password" class="input-field" id="qianwen-key"
-                           placeholder="API Key" style="margin-left:12px;max-width:300px;">
-                    <button class="test-btn" style="margin-left:10px;" onclick="testModel('qianwen')">测试连通</button>
-                </div>
-                <div class="model-version-row">
-                    <span class="ver-label">模型版本</span>
-                    <select class="version-select" id="qianwen-version" disabled>
-                        <option value="">— 请先点击「测试连通」—</option>
-                    </select>
-                </div>
-                <p class="version-hint" id="qianwen-version-hint">填写 API Key 后点击「测试连通」，将自动加载可选模型版本</p>
-                <div class="test-result" id="qianwen-test-result"></div>
-
-                <hr style="border:none;border-top:1px solid #f0f0f0;margin:16px 0;">
-
-                <!-- 智谱GLM -->
-                <div class="model-row">
-                    <span class="model-name">智谱GLM</span>
-                    <input type="text" class="input-field" id="zhipu-endpoint"
-                           value="https://open.bigmodel.cn/api/paas/v4/chat/completions" readonly>
-                    <input type="password" class="input-field" id="zhipu-key"
-                           placeholder="API Key" style="margin-left:12px;max-width:300px;">
-                    <button class="test-btn" style="margin-left:10px;" onclick="testModel('zhipu')">测试连通</button>
-                </div>
-                <div class="model-version-row">
-                    <span class="ver-label">模型版本</span>
-                    <select class="version-select" id="zhipu-version" disabled>
-                        <option value="">— 请先点击「测试连通」—</option>
-                    </select>
-                </div>
-                <p class="version-hint" id="zhipu-version-hint">填写 API Key 后点击「测试连通」，将自动加载可选模型版本</p>
-                <div class="test-result" id="zhipu-test-result"></div>
-
-                <hr style="border:none;border-top:1px solid #f0f0f0;margin:16px 0;">
-
-                <!-- MinMax -->
-                <div class="model-row">
-                    <span class="model-name">MinMax</span>
-                    <input type="text" class="input-field" id="minmax-endpoint"
-                           value="https://api.minimax.chat/v1/text/chatcompletion_v2" readonly>
-                    <input type="password" class="input-field" id="minmax-key"
-                           placeholder="API Key" style="margin-left:12px;max-width:300px;">
-                    <button class="test-btn" style="margin-left:10px;" onclick="testModel('minmax')">测试连通</button>
-                </div>
-                <div class="model-version-row">
-                    <span class="ver-label">模型版本</span>
-                    <select class="version-select" id="minmax-version" disabled>
-                        <option value="">— 请先点击「测试连通」—</option>
-                    </select>
-                </div>
-                <p class="version-hint" id="minmax-version-hint">填写 API Key 后点击「测试连通」，将自动加载可选模型版本</p>
-                <div class="test-result" id="minmax-test-result"></div>
-
-                <hr style="border:none;border-top:1px solid #f0f0f0;margin:16px 0;">
-
-                <!-- DeepSeek -->
-                <div class="model-row">
-                    <span class="model-name">DeepSeek</span>
-                    <input type="text" class="input-field" id="deepseek-endpoint"
-                           value="https://api.deepseek.com/chat/completions" readonly>
-                    <input type="password" class="input-field" id="deepseek-key"
-                           placeholder="API Key" style="margin-left:12px;max-width:300px;">
-                    <button class="test-btn" style="margin-left:10px;" onclick="testModel('deepseek')">测试连通</button>
-                </div>
-                <div class="model-version-row">
-                    <span class="ver-label">模型版本</span>
+                <div class="field-row">
+                    <label class="field-label">模型版本</label>
                     <select class="version-select" id="deepseek-version" disabled>
                         <option value="">— 请先点击「测试连通」—</option>
                     </select>
+                    <p class="version-hint" id="deepseek-version-hint">填写 API Key 后点击「测试连通」，将自动加载可选模型版本</p>
                 </div>
-                <p class="version-hint" id="deepseek-version-hint">填写 API Key 后点击「测试连通」，将自动加载可选模型版本</p>
-                <div class="test-result" id="deepseek-test-result"></div>
-
+                <div class="endpoint-hint">🔗 <code id="deepseek-endpoint-text">https://api.deepseek.com/chat/completions</code></div>
+                <input type="hidden" id="deepseek-endpoint" value="https://api.deepseek.com/chat/completions">
             </div>
-        </div>
 
-        <!-- 自定义模型配置 -->
-        <div class="config-section mt-20" id="custom-section">
-            <div class="header">自定义模型配置</div>
-            <div class="body">
-                <div class="model-row">
-                    <span class="model-name">模型名称</span>
-                    <input type="text" class="input-field" id="custom-name"
-                           placeholder="请输入自定义模型名称" style="max-width:400px;">
+            <!-- ==================== 字节豆包 ==================== -->
+            <div class="model-panel" data-panel="doubao" style="margin-top:20px;">
+                <div class="field-row">
+                    <label class="field-label">API Key<span class="required">*</span></label>
+                    <div class="field-input-group">
+                        <input type="password" class="input-field" id="doubao-key" placeholder="API Key">
+                        <button class="test-btn" onclick="testModel('doubao')">测试连通</button>
+                    </div>
+                    <div class="test-result" id="doubao-test-result"></div>
                 </div>
-                <div class="model-row">
-                    <span class="model-name">API Endpoint</span>
-                    <input type="text" class="input-field" id="custom-endpoint"
-                           placeholder="请输入API端点地址">
+                <div class="field-row">
+                    <label class="field-label">模型版本</label>
+                    <select class="version-select" id="doubao-version" disabled>
+                        <option value="">— 请先点击「测试连通」—</option>
+                    </select>
+                    <p class="version-hint" id="doubao-version-hint">填写 API Key 后点击「测试连通」，将自动加载可选模型版本</p>
                 </div>
-                <div class="model-row">
-                    <span class="model-name">API Key</span>
-                    <input type="password" class="input-field" id="custom-key"
-                           placeholder="请输入API密钥" style="max-width:400px;">
-                    <button class="test-btn" style="margin-left:10px;" onclick="testModel('custom')">测试连通</button>
+                <div class="endpoint-hint">🔗 <code id="doubao-endpoint-text">https://ark.cn-beijing.volces.com/api/v3/chat/completions</code></div>
+                <input type="hidden" id="doubao-endpoint" value="https://ark.cn-beijing.volces.com/api/v3/chat/completions">
+            </div>
+
+            <!-- ==================== 百度文心 ==================== -->
+            <div class="model-panel" data-panel="wenxin" style="margin-top:20px;">
+                <div class="field-row">
+                    <label class="field-label">API Key (AK)<span class="required">*</span></label>
+                    <div class="field-input-group">
+                        <input type="password" class="input-field" id="wenxin-key" placeholder="API Key (AK)">
+                        <button class="test-btn" onclick="testModel('wenxin')">测试连通</button>
+                    </div>
+                    <div class="test-result" id="wenxin-test-result"></div>
                 </div>
-                <div class="model-version-row">
-                    <span class="ver-label">模型版本</span>
-                    <!-- 自定义模型保留文本输入，因为 model 字段完全由用户决定 -->
-                    <input type="text" class="input-field" id="custom-version"
-                           placeholder="可选，填写具体模型名称用于 model 字段"
-                           style="max-width:320px;">
+                <div class="field-row">
+                    <label class="field-label">API Secret (SK)<span class="required">*</span></label>
+                    <input type="password" class="input-field" id="wenxin-secret" placeholder="API Secret (SK)">
                 </div>
-                <div class="test-result" id="custom-test-result"></div>
+                <div class="field-row">
+                    <label class="field-label">模型版本</label>
+                    <select class="version-select" id="wenxin-version" disabled>
+                        <option value="">— 请先点击「测试连通」—</option>
+                    </select>
+                    <p class="version-hint" id="wenxin-version-hint">填写 API Key 后点击「测试连通」，将自动加载可选模型版本</p>
+                </div>
+                <div class="endpoint-hint">🔗 <code id="wenxin-endpoint-text">https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/completions</code></div>
+                <input type="hidden" id="wenxin-endpoint" value="https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/completions">
+            </div>
+
+            <!-- ==================== 阿里千问 ==================== -->
+            <div class="model-panel" data-panel="qianwen" style="margin-top:20px;">
+                <div class="field-row">
+                    <label class="field-label">API Key<span class="required">*</span></label>
+                    <div class="field-input-group">
+                        <input type="password" class="input-field" id="qianwen-key" placeholder="API Key">
+                        <button class="test-btn" onclick="testModel('qianwen')">测试连通</button>
+                    </div>
+                    <div class="test-result" id="qianwen-test-result"></div>
+                </div>
+                <div class="field-row">
+                    <label class="field-label">模型版本</label>
+                    <select class="version-select" id="qianwen-version" disabled>
+                        <option value="">— 请先点击「测试连通」—</option>
+                    </select>
+                    <p class="version-hint" id="qianwen-version-hint">填写 API Key 后点击「测试连通」，将自动加载可选模型版本</p>
+                </div>
+                <div class="endpoint-hint">🔗 <code id="qianwen-endpoint-text">https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions</code></div>
+                <input type="hidden" id="qianwen-endpoint" value="https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions">
+            </div>
+
+            <!-- ==================== 智谱GLM ==================== -->
+            <div class="model-panel" data-panel="zhipu" style="margin-top:20px;">
+                <div class="field-row">
+                    <label class="field-label">API Key<span class="required">*</span></label>
+                    <div class="field-input-group">
+                        <input type="password" class="input-field" id="zhipu-key" placeholder="API Key">
+                        <button class="test-btn" onclick="testModel('zhipu')">测试连通</button>
+                    </div>
+                    <div class="test-result" id="zhipu-test-result"></div>
+                </div>
+                <div class="field-row">
+                    <label class="field-label">模型版本</label>
+                    <select class="version-select" id="zhipu-version" disabled>
+                        <option value="">— 请先点击「测试连通」—</option>
+                    </select>
+                    <p class="version-hint" id="zhipu-version-hint">填写 API Key 后点击「测试连通」，将自动加载可选模型版本</p>
+                </div>
+                <div class="endpoint-hint">🔗 <code id="zhipu-endpoint-text">https://open.bigmodel.cn/api/paas/v4/chat/completions</code></div>
+                <input type="hidden" id="zhipu-endpoint" value="https://open.bigmodel.cn/api/paas/v4/chat/completions">
+            </div>
+
+            <!-- ==================== MinMax ==================== -->
+            <div class="model-panel" data-panel="minmax" style="margin-top:20px;">
+                <div class="field-row">
+                    <label class="field-label">API Key<span class="required">*</span></label>
+                    <div class="field-input-group">
+                        <input type="password" class="input-field" id="minmax-key" placeholder="API Key">
+                        <button class="test-btn" onclick="testModel('minmax')">测试连通</button>
+                    </div>
+                    <div class="test-result" id="minmax-test-result"></div>
+                </div>
+                <div class="field-row">
+                    <label class="field-label">模型版本</label>
+                    <select class="version-select" id="minmax-version" disabled>
+                        <option value="">— 请先点击「测试连通」—</option>
+                    </select>
+                    <p class="version-hint" id="minmax-version-hint">填写 API Key 后点击「测试连通」，将自动加载可选模型版本</p>
+                </div>
+                <div class="endpoint-hint">🔗 <code id="minmax-endpoint-text">https://api.minimax.chat/v1/text/chatcompletion_v2</code></div>
+                <input type="hidden" id="minmax-endpoint" value="https://api.minimax.chat/v1/text/chatcompletion_v2">
+            </div>
+
+            <!-- ==================== 自定义模型 ==================== -->
+            <div class="model-panel" data-panel="custom" style="margin-top:20px;">
+                <div class="field-row">
+                    <label class="field-label">模型名称<span class="required">*</span></label>
+                    <input type="text" class="input-field" id="custom-name" placeholder="请输入自定义模型名称">
+                </div>
+                <div class="field-row">
+                    <label class="field-label">API Endpoint<span class="required">*</span></label>
+                    <input type="text" class="input-field" id="custom-endpoint" placeholder="https://your-api-endpoint/chat/completions">
+                </div>
+                <div class="field-row">
+                    <label class="field-label">API Key<span class="required">*</span></label>
+                    <div class="field-input-group">
+                        <input type="password" class="input-field" id="custom-key" placeholder="API Key">
+                        <button class="test-btn" onclick="testModel('custom')">测试连通</button>
+                    </div>
+                    <div class="test-result" id="custom-test-result"></div>
+                </div>
+                <div class="field-row">
+                    <label class="field-label">模型版本（可选）</label>
+                    <input type="text" class="input-field" id="custom-version" placeholder="填写具体模型名称用于 model 字段" style="max-width:420px;">
+                </div>
             </div>
         </div>
 
         <!-- 保存按钮 -->
-        <div class="text-center mt-20">
-            <button class="btn btn-primary" id="btn-save" style="min-width:150px;">保存配置</button>
+        <div class="save-bar">
+            <button class="btn btn-primary" id="btn-save" style="min-width:160px;padding:11px 28px;font-size:14px;">保存 API Key</button>
+            <button class="btn btn-secondary" id="btn-clear-key" style="padding:11px 20px;">🗑️ 清除</button>
         </div>
 
         <!-- 配置状态 -->
-        <div class="card mt-20">
-            <div class="input-group" style="margin-bottom:0;">
-                <label class="input-label">配置状态</label>
-                <div id="config-status" style="color:var(--text-muted);font-size:14px;">正在加载...</div>
+        <div class="card mt-20" style="padding:18px 22px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+                <label class="input-label" style="margin-bottom:0;">配置状态</label>
+                <div id="config-status" style="font-size:14px;">正在加载...</div>
             </div>
         </div>
+
+        <!-- 页脚免责声明 -->
+        <footer class="app-footer">
+            <div class="app-footer-inner">
+                <p class="disclaimer-title">⚠️ 免责声明</p>
+                <p>本工具仅作为简历初筛辅助参考，API Key 仅保存在你的浏览器本地，不会上传至服务器；分析结果由 AI 生成，不构成任何招聘决策依据。请结合人工综合判断做出最终录用决定。</p>
+            </div>
+        </footer>
     </div>
 
     <!-- 加载状态 -->

@@ -8,7 +8,7 @@
     <link rel="icon" type="image/svg+xml" href="static/favicon.svg">
     <link rel="stylesheet" href="static/css/style.css">
 </head>
-<body>
+<body class="result-page">
     <!-- 页面头部 -->
     <header class="page-header">
         <div class="page-header-left">
@@ -38,6 +38,14 @@
                 <!-- 简历详情 -->
             </div>
         </div>
+
+        <!-- 页脚免责声明 -->
+        <footer class="app-footer" style="margin-top:24px;">
+            <div class="app-footer-inner">
+                <p class="disclaimer-title">⚠️ 免责声明</p>
+                <p>本工具仅作为简历初筛辅助参考，分析结果由 AI 生成，不构成任何招聘决策依据。请结合人工综合判断做出最终录用决定。</p>
+            </div>
+        </footer>
     </div>
 
     <!-- 加载状态 -->
@@ -47,6 +55,7 @@
     </div>
 
     <script src="static/js/state.js"></script>
+    <script src="static/js/cache.js"></script>
     <script src="static/js/api.js"></script>
     <script src="static/js/toast.js"></script>
     <script src="static/js/result.js"></script>

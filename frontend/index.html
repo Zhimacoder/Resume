@@ -16,7 +16,7 @@
             <h1 class="page-title">智能简历筛选工具</h1>
         </div>
         <div class="page-header-actions">
-            <button class="btn btn-secondary" id="btn-config">⚙️ API 配置</button>
+            <button class="btn btn-secondary" id="btn-config">⚙️ 我的 API Key</button>
         </div>
     </header>
 
@@ -35,8 +35,17 @@
 
         <!-- APIkey未配置警示通栏 -->
         <div class="alert-banner hidden" id="alert-banner">
-            <span>⚠️ 请先完成 API Key 配置，否则无法使用智能筛选功能</span>
+            <span>⚠️ 请先配置你的 API Key，否则无法使用智能筛选功能</span>
             <button class="btn" id="btn-go-config">去配置</button>
+        </div>
+
+        <!-- 筛选结果入口通栏 -->
+        <div class="result-banner hidden" id="result-banner">
+            <span>📊 已有 <strong id="result-count">0</strong> 份简历筛选结果</span>
+            <div style="display:flex;gap:8px;align-items:center;">
+                <button class="btn-primary-sm" id="btn-view-result">查看结果</button>
+                <button class="banner-close" id="btn-dismiss-result" title="关闭提示">✕</button>
+            </div>
         </div>
 
         <!-- JD输入区域 -->
@@ -69,6 +78,18 @@
                         <input type="text" class="input-field" id="dim-education" placeholder="例：本科及以上、硕士优先">
                     </div>
                     <div class="input-group" style="margin-bottom:0;grid-column:1/-1;">
+                        <label class="input-label">年龄段要求</label>
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <select class="input-field" id="dim-age-min" style="flex:1;">
+                                <option value="">最小年龄（不限）</option>
+                            </select>
+                            <span style="color:var(--text-muted);font-size:14px;">—</span>
+                            <select class="input-field" id="dim-age-max" style="flex:1;">
+                                <option value="">最大年龄（不限）</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="input-group" style="margin-bottom:0;grid-column:1/-1;">
                         <label class="input-label">核心技能权重说明</label>
                         <input type="text" class="input-field" id="dim-skill-weights" placeholder="例：Python、机器学习优先；SQL必须掌握">
                     </div>
@@ -77,7 +98,7 @@
                         <input type="text" class="input-field" id="dim-extra" placeholder="例：有大厂经验优先、需要英语良好">
                     </div>
                 </div>
-                <p style="color:var(--text-muted);font-size:12px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);">以上维度将作为额外参考传给大模型，影响匹配评分和分析结果。</p>
+                <p style="color:var(--text-muted);font-size:12px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);">以上维度将作为额外参考传给大模型，影响匹配评分和分析结果。年龄段从简历身份证号/出生日期字段精确提取，未提供年龄信息的简历不会被扣分，将标注"年龄未知"。</p>
             </div>
         </div>
 
@@ -112,6 +133,14 @@
                 </button>
             </div>
         </div>
+
+        <!-- 页脚免责声明 -->
+        <footer class="app-footer">
+            <div class="app-footer-inner">
+                <p class="disclaimer-title">⚠️ 免责声明</p>
+                <p>本工具仅作为简历初筛辅助参考，所有简历内容在本地完成解析与脱敏后才发送至大模型；分析结果由 AI 生成，不构成任何招聘决策依据。用户需自行提供 API Key 并承担相应费用，本工具不存储、不上传任何简历原文。请招聘方结合人工综合判断做出最终录用决定。</p>
+            </div>
+        </footer>
     </div>
 
     <!-- 未配置拦截弹框 -->
@@ -119,7 +148,7 @@
         <div class="modal-content">
             <div class="modal-header">⚠️ 缺少 API Key 配置</div>
             <div class="modal-body">
-                当前未完成大模型 API Key 有效配置，无法执行智能筛选，请先完成配置后再操作。
+                当前浏览器未配置有效的大模型 API Key，无法执行智能筛选。请先配置你自己的 API Key 后再操作（Key 仅保存在你的浏览器）。
             </div>
             <div class="modal-footer">
                 <button class="btn btn-secondary" id="btn-cancel">取消</button>

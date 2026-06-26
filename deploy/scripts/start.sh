@@ -1,17 +1,18 @@
 #!/usr/bin/env bash
 # ==============================================================
 # 智能简历筛选工具 — 服务管理脚本
-# 用法：./start.sh [start|stop|restart|health]
+# 用法：bash deploy/scripts/start.sh [start|stop|restart|health]
 # ==============================================================
 
 set -euo pipefail
 
 # ── 配置项（按需修改）──────────────────────────────────────────
-BACKEND_DIR="$(cd "$(dirname "$0")/backend" && pwd)"
+PROJECT_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
+SERVER_DIR="$PROJECT_DIR/server"
 HOST="${HOST:-0.0.0.0}"
 PORT="${PORT:-8000}"
 WORKERS="${WORKERS:-1}"
-LOG_DIR="$(cd "$(dirname "$0")" && pwd)/logs"
+LOG_DIR="$PROJECT_DIR/logs"
 LOG_FILE="$LOG_DIR/app.log"
 PID_FILE="$LOG_DIR/app.pid"
 HEALTH_URL="http://127.0.0.1:${PORT}/api/health"
@@ -51,7 +52,7 @@ check_uvicorn() {
     local python="$1"
     if ! "$python" -m uvicorn --version &>/dev/null; then
         log_warn "未检测到 uvicorn，尝试安装依赖..."
-        "$python" -m pip install -r "$BACKEND_DIR/requirements.txt" --quiet
+        "$python" -m pip install -r "$SERVER_DIR/requirements.txt" --quiet
     fi
 }
 
@@ -85,9 +86,9 @@ do_start() {
     log_step "启动服务：$python -m uvicorn main:app  ($HOST:$PORT)"
     log_step "日志输出：$LOG_FILE"
 
-    # 切换到 backend 目录后台运行
+    # 切换到 server 目录后台运行
     (
-        cd "$BACKEND_DIR"
+        cd "$SERVER_DIR"
         nohup "$python" -m uvicorn main:app \
             --host "$HOST" \
             --port "$PORT" \

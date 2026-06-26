@@ -7,6 +7,9 @@ const CacheManager = (function() {
     const CACHE_KEY = 'resume_screening_cache';
     const JD_KEY = 'jd_content';
     const RESUME_LIST_KEY = 'resume_list';
+    const RESULTS_KEY = 'screening_results';
+    const DIMENSIONS_KEY = 'screening_dimensions';
+    const DISMISS_KEY = 'result_banner_dismissed';
     const MAX_CACHE_SIZE = 1 * 1024 * 1024; // 单文件缓存上限 1MB
 
     /**
@@ -51,10 +54,104 @@ const CacheManager = (function() {
     }
 
     /**
-     * 清空缓存
+     * 清空JD和简历缓存
      */
     function clearCache() {
         sessionStorage.removeItem(CACHE_KEY);
+    }
+
+    /**
+     * 清空所有会话数据（JD + 简历 + 结果 + 维度 + 横幅关闭状态）
+     */
+    function clearAll() {
+        clearCache();
+        clearResults();
+        clearDimensions();
+        sessionStorage.removeItem(DISMISS_KEY);
+    }
+
+    /**
+     * 保存筛选结果
+     */
+    function saveResults(results) {
+        try {
+            sessionStorage.setItem(RESULTS_KEY, JSON.stringify(results));
+            sessionStorage.removeItem(DISMISS_KEY);
+        } catch (e) {
+            console.error('保存结果失败:', e);
+        }
+    }
+
+    /**
+     * 获取筛选结果
+     */
+    function getResults() {
+        try {
+            const data = sessionStorage.getItem(RESULTS_KEY);
+            return data ? JSON.parse(data) : null;
+        } catch (e) {
+            console.error('读取结果失败:', e);
+            return null;
+        }
+    }
+
+    /**
+     * 是否存在有效筛选结果
+     */
+    function hasResults() {
+        const r = getResults();
+        return !!(r && r.results && r.results.length > 0);
+    }
+
+    /**
+     * 清除筛选结果
+     */
+    function clearResults() {
+        sessionStorage.removeItem(RESULTS_KEY);
+    }
+
+    /**
+     * 保存筛选维度
+     */
+    function saveDimensions(dimensions) {
+        try {
+            sessionStorage.setItem(DIMENSIONS_KEY, JSON.stringify(dimensions || {}));
+        } catch (e) {
+            console.error('保存维度失败:', e);
+        }
+    }
+
+    /**
+     * 获取筛选维度
+     */
+    function getDimensions() {
+        try {
+            const data = sessionStorage.getItem(DIMENSIONS_KEY);
+            return data ? JSON.parse(data) : {};
+        } catch (e) {
+            return {};
+        }
+    }
+
+    /**
+     * 清除筛选维度
+     */
+    function clearDimensions() {
+        sessionStorage.removeItem(DIMENSIONS_KEY);
+    }
+
+    /**
+     * 标记结果横幅为已关闭（本次会话内不再显示）
+     */
+    function dismissResultBanner() {
+        sessionStorage.setItem(DISMISS_KEY, '1');
+    }
+
+    /**
+     * 结果横幅是否被用户关闭
+     */
+    function isResultBannerDismissed() {
+        return sessionStorage.getItem(DISMISS_KEY) === '1';
     }
 
     /**
@@ -159,10 +256,20 @@ const CacheManager = (function() {
         saveResumeList,
         getResumeList,
         clearCache,
+        clearAll,
         hasCache,
         getCacheInfo,
         fileToCacheable,
-        cacheToFiles
+        cacheToFiles,
+        saveResults,
+        getResults,
+        hasResults,
+        clearResults,
+        saveDimensions,
+        getDimensions,
+        clearDimensions,
+        dismissResultBanner,
+        isResultBannerDismissed
     };
 })();
 

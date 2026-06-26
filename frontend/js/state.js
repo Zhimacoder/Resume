@@ -1,38 +1,85 @@
 /**
  * 全局状态管理模块
  * 负责APIkey配置状态的校验和同步
+ *
+ * 支持两种模式（由后端 /api/config/status 的 require_user_api_key 字段决定）：
+ * - 生产模式（require_user_api_key=true）：API Key 存浏览器 localStorage，
+ *   调用 /api/screening 时随请求上传，后端不持久化
+ * - 本地模式（require_user_api_key=false）：沿用服务器端配置（load_config）
  */
+
+const STORAGE_KEY = 'resume_screening_user_api_key';
+
+const UserConfigStore = {
+    load() {
+        try {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            return raw ? JSON.parse(raw) : null;
+        } catch (e) {
+            console.error('读取用户 API Key 配置失败:', e);
+            return null;
+        }
+    },
+    save(config) {
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
+            return true;
+        } catch (e) {
+            console.error('保存用户 API Key 配置失败:', e);
+            return false;
+        }
+    },
+    clear() {
+        localStorage.removeItem(STORAGE_KEY);
+    }
+};
+
+
+function _isUserConfigValid(config) {
+    if (!config) return false;
+    const currentModel = config.current_model;
+    if (!currentModel) return false;
+    const model = (config.models || {})[currentModel];
+    if (!model) return false;
+    if (!model.api_key || !model.endpoint) return false;
+    if (currentModel === 'wenxin' && !model.api_secret) return false;
+    return true;
+}
+
 
 const GlobalState = (function() {
     let state = {
         is_config_valid: false,
-        current_model: "doubao",
-        models: {}
+        current_model: "deepseek",
+        models: {},
+        require_user_api_key: false
     };
 
     let listeners = [];
 
-    /**
-     * 初始化状态
-     */
     async function init() {
         await checkConfigStatus();
         return state;
     }
 
-    /**
-     * 校验APIkey配置状态
-     */
     async function checkConfigStatus() {
         try {
             const response = await fetch('api/config/status');
             if (response.ok) {
                 const data = await response.json();
-                state.is_config_valid = data.is_config_valid;
-                state.current_model = data.current_model;
-                state.models = data.models;
+                state.require_user_api_key = !!data.require_user_api_key;
 
-                // 通知所有监听器
+                if (state.require_user_api_key) {
+                    const userConfig = UserConfigStore.load();
+                    state.current_model = (userConfig && userConfig.current_model) || 'deepseek';
+                    state.models = (userConfig && userConfig.models) || {};
+                    state.is_config_valid = _isUserConfigValid(userConfig);
+                } else {
+                    state.is_config_valid = data.is_config_valid;
+                    state.current_model = data.current_model;
+                    state.models = data.models;
+                }
+
                 notifyListeners();
                 return data;
             }
@@ -42,47 +89,60 @@ const GlobalState = (function() {
         return state;
     }
 
-    /**
-     * 获取当前状态
-     */
     function getState() {
         return { ...state };
     }
 
-    /**
-     * 获取当前模型配置
-     */
     function getCurrentModelConfig() {
         const model = state.models[state.current_model];
         return model || null;
     }
 
-    /**
-     * 验证配置是否有效
-     */
     function isValid() {
+        if (state.require_user_api_key) {
+            const userConfig = UserConfigStore.load();
+            return _isUserConfigValid(userConfig);
+        }
+
         if (!state.is_config_valid) return false;
 
         const model = state.models[state.current_model];
         if (!model) return false;
 
         return model.is_valid &&
-               model.api_key &&
+               model.has_api_key &&
                model.endpoint;
     }
 
-    /**
-     * 添加状态监听器
-     */
+    function getUserConfig() {
+        return UserConfigStore.load();
+    }
+
+    function saveUserConfig(config) {
+        const ok = UserConfigStore.save(config);
+        if (ok) {
+            const userConfig = UserConfigStore.load();
+            state.current_model = (userConfig && userConfig.current_model) || 'deepseek';
+            state.models = (userConfig && userConfig.models) || {};
+            state.is_config_valid = _isUserConfigValid(userConfig);
+            notifyListeners();
+        }
+        return ok;
+    }
+
+    function clearUserConfig() {
+        UserConfigStore.clear();
+        state.models = {};
+        state.is_config_valid = false;
+        notifyListeners();
+    }
+
     function addListener(callback) {
         if (typeof callback === 'function') {
             listeners.push(callback);
         }
     }
 
-    /**
-     * 移除状态监听器
-     */
     function removeListener(callback) {
         const index = listeners.indexOf(callback);
         if (index > -1) {
@@ -90,9 +150,6 @@ const GlobalState = (function() {
         }
     }
 
-    /**
-     * 通知所有监听器
-     */
     function notifyListeners() {
         listeners.forEach(callback => {
             try {
@@ -103,9 +160,6 @@ const GlobalState = (function() {
         });
     }
 
-    /**
-     * 更新配置
-     */
     async function saveConfig(config) {
         try {
             const response = await fetch('api/config', {
@@ -119,7 +173,6 @@ const GlobalState = (function() {
             const data = await response.json();
 
             if (data.success) {
-                // 更新本地状态
                 await checkConfigStatus();
                 return true;
             }
@@ -130,7 +183,6 @@ const GlobalState = (function() {
         }
     }
 
-    // 导出接口
     return {
         init,
         checkConfigStatus,
@@ -139,9 +191,12 @@ const GlobalState = (function() {
         isValid,
         addListener,
         removeListener,
-        saveConfig
+        saveConfig,
+        getUserConfig,
+        saveUserConfig,
+        clearUserConfig
     };
 })();
 
-// 导出到全局
 window.GlobalState = GlobalState;
+window.UserConfigStore = UserConfigStore;

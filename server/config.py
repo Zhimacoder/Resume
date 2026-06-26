@@ -71,7 +71,7 @@ DEFAULT_MODELS = {
 }
 
 DEFAULT_CONFIG = {
-    "current_model": "doubao",
+    "current_model": "deepseek",
     "is_config_valid": False,
     "models": DEFAULT_MODELS
 }
@@ -144,7 +144,7 @@ def save_config(config: Dict[str, Any]) -> bool:
 
         existing = load_config() if CONFIG_FILE.exists() else DEFAULT_CONFIG.copy()
 
-        current_model = config.get("current_model", "doubao")
+        current_model = config.get("current_model", "deepseek")
         new_models = config.get("models", {})
         existing_models = existing.get("models", {})
 
@@ -201,7 +201,7 @@ def get_config_status() -> Dict[str, Any]:
         }
     return {
         "is_config_valid": config.get("is_config_valid", False),
-        "current_model": config.get("current_model", "doubao"),
+        "current_model": config.get("current_model", "deepseek"),
         "models": models
     }
 
@@ -222,7 +222,7 @@ def get_masked_config() -> Dict[str, Any]:
             masked["api_secret"] = _mask_secret(model_data.get("api_secret", ""))
         models[model_key] = masked
     return {
-        "current_model": config.get("current_model", "doubao"),
+        "current_model": config.get("current_model", "deepseek"),
         "is_config_valid": config.get("is_config_valid", False),
         "models": models
     }

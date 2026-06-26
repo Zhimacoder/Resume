@@ -12,12 +12,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 });
 
 function initPage() {
-    try {
-        const data = sessionStorage.getItem('screening_results');
-        resultsData = JSON.parse(data);
-    } catch (e) {
-        resultsData = null;
-    }
+    resultsData = CacheManager.getResults();
 
     if (!resultsData || !resultsData.results || resultsData.results.length === 0) {
         Toast.warning('无筛选结果，请重新筛选');
@@ -73,9 +68,13 @@ function renderResultList() {
     container.innerHTML = results.map((item, index) => {
         const score = item.score || 0;
         const scoreClass = score >= 75 ? 'score-high' : score >= 50 ? 'score-mid' : 'score-low';
+        const ageTag = buildAgeTag(item.age_info);
         return `
         <div class="result-item ${index === currentIndex ? 'active' : ''}" data-index="${index}">
-            <div class="name">📄 ${item.resume_name}</div>
+            <div class="name-row">
+                <span class="name">📄 ${item.resume_name}</span>
+                ${ageTag}
+            </div>
             <div class="score ${scoreClass}">${score}分</div>
         </div>`;
     }).join('');
@@ -108,91 +107,121 @@ function renderDetail(item) {
     const interviewQuestions = item.interview_questions || [];
     const score = item.score || 0;
     const scoreBarWidth = Math.min(score, 100);
-    const scoreClass = score >= 75 ? 'score-high' : score >= 50 ? 'score-mid' : 'score-low';
+    const scoreTone = score >= 75 ? 'high' : score >= 50 ? 'mid' : 'low';
     const scoreBarColor = score >= 75
         ? 'linear-gradient(135deg,#10b981,#059669)'
         : score >= 50
             ? 'linear-gradient(135deg,#f59e0b,#d97706)'
             : 'linear-gradient(135deg,#ef4444,#dc2626)';
+    const ageTag = buildAgeTag(item.age_info);
 
     container.innerHTML = `
-        <div class="detail-resume-name">
-            📄 <span>${item.resume_name}</span>
-        </div>
-
-        <div class="detail-section">
-            <div class="title">
-                <span class="title-icon" style="background:#ede9fe;">📝</span>
-                简历概述
+        <div class="detail-top">
+            <div class="detail-title-block">
+                <div class="detail-resume-name">
+                    <span class="file-mark">📄</span>
+                    <span>${item.resume_name}</span>
+                    ${ageTag}
+                </div>
+                <div class="detail-summary-inline">${item.summary || '暂无概述'}</div>
             </div>
-            <div class="summary-box">${item.summary || '暂无概述'}</div>
-        </div>
-
-        <div class="detail-section">
-            <div class="title">
-                <span class="title-icon" style="background:#d1fae5;">✅</span>
-                与岗位的匹配点
-            </div>
-            <div class="content">
-                ${matchingPoints.length > 0 ? `
-                    <ul class="list-match">
-                        ${matchingPoints.map(p => `<li data-icon="✓">${p}</li>`).join('')}
-                    </ul>
-                ` : '<span style="color:var(--text-muted)">暂无</span>'}
-            </div>
-        </div>
-
-        <div class="detail-section">
-            <div class="title">
-                <span class="title-icon" style="background:#fee2e2;">⚠️</span>
-                与岗位的不足点
-            </div>
-            <div class="content">
-                ${shortcomings.length > 0 ? `
-                    <ul class="list-gap">
-                        ${shortcomings.map(s => `<li data-icon="✗">${s}</li>`).join('')}
-                    </ul>
-                ` : '<span style="color:var(--text-muted)">暂无</span>'}
-            </div>
-        </div>
-
-        <div class="detail-section">
-            <div class="title">
-                <span class="title-icon" style="background:#eef0fe;">💬</span>
-                建议面试问题
-            </div>
-            <div class="content">
-                ${interviewQuestions.length > 0 ? `
-                    <ul class="list-question">
-                        ${interviewQuestions.map(q => `<li>${q}</li>`).join('')}
-                    </ul>
-                ` : '<span style="color:var(--text-muted)">暂无</span>'}
-            </div>
-        </div>
-
-        <div class="detail-section">
-            <div class="title">
-                <span class="title-icon" style="background:#eef0fe;">🎯</span>
-                匹配度评分
-            </div>
-            <div class="score-display">
-                <span class="score-badge-large" style="background:${scoreBarColor};-webkit-background-clip:text;background-clip:text;">${score}</span>
-                <div style="flex:1;">
-                    <div class="score-bar-wrap">
-                        <div class="score-bar" style="width:${scoreBarWidth}%;background:${scoreBarColor};"></div>
-                    </div>
-                    <div style="font-size:12px;color:var(--text-muted);margin-top:5px;">${score >= 75 ? '高度匹配' : score >= 50 ? '基本匹配' : '匹配度较低'}</div>
+            <div class="score-card score-card-${scoreTone}">
+                <div class="score-value" style="background:${scoreBarColor};-webkit-background-clip:text;background-clip:text;">${score}</div>
+                <div class="score-label">${score >= 75 ? '高度匹配' : score >= 50 ? '基本匹配' : '匹配度较低'}</div>
+                <div class="score-bar-wrap compact">
+                    <div class="score-bar" style="width:${scoreBarWidth}%;background:${scoreBarColor};"></div>
                 </div>
             </div>
         </div>
+
+        <div class="detail-grid">
+            <section class="detail-section section-match">
+                <div class="title">
+                    <span class="title-icon title-icon-match">✓</span>
+                    匹配点
+                    <span class="section-count">${matchingPoints.length}</span>
+                </div>
+                <div class="content">
+                    ${matchingPoints.length > 0 ? `
+                        <ul class="list-match compact-list">
+                            ${matchingPoints.map(p => `<li data-icon="✓">${p}</li>`).join('')}
+                        </ul>
+                    ` : '<span style="color:var(--text-muted)">暂无</span>'}
+                </div>
+            </section>
+
+            <section class="detail-section section-gap">
+                <div class="title">
+                    <span class="title-icon title-icon-gap">!</span>
+                    不足点
+                    <span class="section-count">${shortcomings.length}</span>
+                </div>
+                <div class="content">
+                    ${shortcomings.length > 0 ? `
+                        <ul class="list-gap compact-list">
+                            ${shortcomings.map(s => `<li data-icon="!">${s}</li>`).join('')}
+                        </ul>
+                    ` : '<span style="color:var(--text-muted)">暂无</span>'}
+                </div>
+            </section>
+        </div>
+
+        <section class="detail-section section-questions">
+            <div class="title">
+                <span class="title-icon title-icon-question">?</span>
+                建议面试问题
+                <span class="section-count">${interviewQuestions.length}</span>
+            </div>
+            <div class="content">
+                ${interviewQuestions.length > 0 ? `
+                    <ul class="list-question question-grid">
+                        ${interviewQuestions.map(q => {
+                            let qText, qFocus;
+                            if (typeof q === 'object' && q !== null) {
+                                qText = q.question || '';
+                                qFocus = q.focus || '';
+                            } else {
+                                qText = String(q);
+                                qFocus = '';
+                            }
+                            return `
+                                <li>
+                                    <div class="question-item">
+                                        <div class="question-text">${qText}</div>
+                                        ${qFocus ? `<div class="question-focus">考察：${qFocus}</div>` : ''}
+                                    </div>
+                                </li>
+                            `;
+                        }).join('')}
+                    </ul>
+                ` : '<span style="color:var(--text-muted)">暂无</span>'}
+            </div>
+        </section>
     `;
 }
 
 function goHome() {
-    sessionStorage.removeItem('screening_results');
     window.location.href = '.';
 }
 
 function goConfig() {
-    window.location.href = 'config';
+    window.location.href = 'config?from=result';
+}
+
+function buildAgeTag(ageInfo) {
+    if (!ageInfo) return '';
+    const age = ageInfo.age;
+    const inRange = ageInfo.in_range;
+
+    if (age === null || age === undefined) {
+        return '<span class="age-tag age-unknown" title="简历中未提供出生日期或身份证号，无法确定年龄">❓ 年龄未知</span>';
+    }
+
+    if (inRange === true) {
+        return `<span class="age-tag age-match" title="年龄${age}岁，符合要求">✅ ${age}岁</span>`;
+    } else if (inRange === false) {
+        return `<span class="age-tag age-mismatch" title="年龄${age}岁，不符合年龄段要求">❌ ${age}岁</span>`;
+    } else {
+        return `<span class="age-tag age-neutral" title="未设置年龄段要求，年龄${age}岁">${age}岁</span>`;
+    }
 }

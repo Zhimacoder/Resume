@@ -12,13 +12,14 @@ RUN sed -i 's/deb.debian.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apt/sources.li
     tesseract-ocr-eng \
     && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /app/backend
+WORKDIR /app/server
 
-COPY backend/requirements.txt /app/backend/
+COPY server/requirements.txt /app/server/
 RUN pip install --no-cache-dir -i https://pypi.tuna.tsinghua.edu.cn/simple --trusted-host pypi.tuna.tsinghua.edu.cn -r requirements.txt
 
-COPY backend/ /app/backend/
+COPY server/ /app/server/
 COPY frontend/ /app/frontend/
+COPY website/ /app/website/
 
 RUN mkdir -p /app/config /app/logs
 

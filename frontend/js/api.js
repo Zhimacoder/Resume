@@ -82,6 +82,9 @@ const API = (function() {
      * @param {string} jdContent - JD内容
      * @param {File[]} files - 简历文件列表
      * @param {Object|null} dimensions - 自定义匹配维度（可选）
+     *
+     * 生产模式下会从 GlobalState.getUserConfig() 读取当前模型的 API Key 等字段，
+     * 附加到 FormData 一起上传给后端。本地模式下这些字段后端会忽略。
      */
     async function screening(jdContent, files, dimensions) {
         const formData = new FormData();
@@ -93,6 +96,17 @@ const API = (function() {
 
         if (dimensions) {
             formData.append('dimensions', JSON.stringify(dimensions));
+        }
+
+        const userConfig = (window.GlobalState && GlobalState.getUserConfig()) || null;
+        if (userConfig) {
+            const currentModel = userConfig.current_model;
+            const modelConfig = (userConfig.models || {})[currentModel] || {};
+            if (modelConfig.api_key) formData.append('api_key', modelConfig.api_key);
+            if (currentModel) formData.append('model_type', currentModel);
+            if (modelConfig.endpoint) formData.append('model_endpoint', modelConfig.endpoint);
+            if (modelConfig.model_version) formData.append('model_name', modelConfig.model_version);
+            if (modelConfig.api_secret) formData.append('api_secret', modelConfig.api_secret);
         }
 
         return request('/screening', {

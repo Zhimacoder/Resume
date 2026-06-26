@@ -22,15 +22,34 @@ const modelFields = {
 const modelVersionCache = {};
 
 document.addEventListener('DOMContentLoaded', async function() {
+    await GlobalState.init();
     await loadConfig();
     bindEvents();
-    updateUI();
+    updateBackButton();
 });
+
+function updateBackButton() {
+    const params = new URLSearchParams(window.location.search);
+    const from = params.get('from');
+    const btn = document.getElementById('btn-home');
+    if (from === 'result') {
+        btn.textContent = '← 返回结果';
+    } else {
+        btn.textContent = '← 返回主页';
+    }
+}
 
 async function loadConfig() {
     try {
-        const response = await API.getConfig();
-        configData = response;
+        const userConfig = GlobalState.getUserConfig();
+        if (userConfig) {
+            configData = userConfig;
+        } else {
+            configData = {
+                current_model: 'deepseek',
+                models: {}
+            };
+        }
         fillFormData();
         updateStatus();
     } catch (error) {
@@ -42,12 +61,35 @@ async function loadConfig() {
 function bindEvents() {
     document.getElementById('btn-home').addEventListener('click', goHome);
     document.getElementById('btn-save').addEventListener('click', saveConfig);
-    document.getElementById('current-model-select').addEventListener('change', updateUI);
+    document.getElementById('btn-clear-key').addEventListener('click', clearUserApiKey);
+
+    // Tab 切换
+    document.querySelectorAll('.model-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            switchModel(tab.dataset.model);
+        });
+    });
+}
+
+function switchModel(modelKey) {
+    // 更新 Tab 高亮
+    document.querySelectorAll('.model-tab').forEach(t => {
+        t.classList.toggle('active', t.dataset.model === modelKey);
+    });
+    // 切换面板
+    document.querySelectorAll('.model-panel').forEach(p => {
+        p.classList.toggle('active', p.dataset.panel === modelKey);
+    });
+    // 同步隐藏的 select（config.js 内部读取用）
+    document.getElementById('current-model-select').value = modelKey;
 }
 
 function fillFormData() {
     if (!configData) return;
-    document.getElementById('current-model-select').value = configData.current_model || 'doubao';
+    const currentModel = configData.current_model || 'deepseek';
+    document.getElementById('current-model-select').value = currentModel;
+    switchModel(currentModel);
+
     const models = configData.models || {};
 
     Object.keys(modelFields).forEach(modelKey => {
@@ -61,7 +103,7 @@ function fillFormData() {
         }
         if (fields.endpoint) {
             const el = document.getElementById(fields.endpoint);
-            if (el && !el.readOnly) el.value = model.endpoint || '';
+            if (el && el.type !== 'hidden') el.value = model.endpoint || '';
         }
         if (fields.key) {
             const el = document.getElementById(fields.key);
@@ -96,28 +138,22 @@ function fillFormData() {
     });
 }
 
-function updateUI() {
-    const currentModel = document.getElementById('current-model-select').value;
-    document.getElementById('custom-section').style.display =
-        currentModel === 'custom' ? 'block' : 'none';
-}
-
 function updateStatus() {
     const statusEl = document.getElementById('config-status');
+    if (!statusEl) return;
     if (!configData) { statusEl.textContent = '加载失败'; return; }
 
     const currentModel = configData.current_model;
     const model = (configData.models || {})[currentModel];
 
     if (model && model.api_key && model.endpoint) {
-        const isMasked = model.api_key && model.api_key.indexOf('****') >= 0;
         statusEl.innerHTML =
-            '<span style="color:#10b981;">✓ 已配置</span> — 当前模型：' +
+            '<span style="color:#10b981;">✓ 已配置</span> — ' +
             (model.model_name || currentModel) +
             (model.model_version ? `（${model.model_version}）` : '') +
-            (isMasked ? ' <span style="font-size:12px;color:var(--text-muted);">（Key 已隐藏）</span>' : '');
+            ' <span style="font-size:12px;color:var(--text-muted);">Key 已存在浏览器</span>';
     } else {
-        statusEl.innerHTML = '<span style="color:#ef4444;">✕ 未配置</span> — 请完成 API Key 配置';
+        statusEl.innerHTML = '<span style="color:#ef4444;">✕ 未配置</span> <span style="font-size:12px;color:var(--text-muted);">请填写并保存 API Key</span>';
     }
 }
 
@@ -258,7 +294,8 @@ async function saveConfig() {
 
     showLoading('正在保存...');
     try {
-        const models = { ...(configData ? configData.models : {}) };
+        const existingModels = (configData && configData.models) ? configData.models : {};
+        const models = { ...existingModels };
         models[currentModel] = {
             model_name:    modelName,
             api_key:       apiKey,
@@ -271,15 +308,14 @@ async function saveConfig() {
         }
 
         const newConfig = { current_model: currentModel, models };
-        const response  = await API.saveConfig(newConfig);
+        const ok = GlobalState.saveUserConfig(newConfig);
 
-        if (response.success) {
-            configData = newConfig;
-            await GlobalState.checkConfigStatus();
+        if (ok) {
+            configData = GlobalState.getUserConfig() || newConfig;
             updateStatus();
-            Toast.success('配置保存成功！');
+            Toast.success('API Key 已保存到你的浏览器');
         } else {
-            Toast.error('保存失败: ' + (response.detail || '未知错误'));
+            Toast.error('保存失败：浏览器 localStorage 写入异常');
         }
     } catch (error) {
         Toast.error('保存失败: ' + error.message);
@@ -288,12 +324,38 @@ async function saveConfig() {
     }
 }
 
+function clearUserApiKey() {
+    if (!confirm('确定要清除本浏览器中保存的 API Key 吗？此操作仅影响当前浏览器，不会影响其他设备。')) return;
+    GlobalState.clearUserConfig();
+    configData = { current_model: 'deepseek', models: {} };
+    // 清空所有输入框
+    document.querySelectorAll('.model-panel input:not([type="hidden"]), .model-panel select').forEach(el => {
+        if (el.tagName === 'SELECT') {
+            el.innerHTML = '<option value="">— 请先点击「测试连通」—</option>';
+            el.disabled = true;
+        } else {
+            el.value = '';
+        }
+    });
+    switchModel('deepseek');
+    updateStatus();
+    Toast.info('已清除本浏览器的 API Key 配置');
+}
+
 function getModelDisplayName(key) {
     return { doubao:'字节豆包', wenxin:'百度文心', qianwen:'阿里千问',
              zhipu:'智谱GLM', minmax:'MinMax', deepseek:'DeepSeek' }[key] || key;
 }
 
-function goHome() { window.location.href = './'; }
+function goHome() {
+    const params = new URLSearchParams(window.location.search);
+    const from = params.get('from');
+    if (from === 'result') {
+        window.location.href = 'result';
+    } else {
+        window.location.href = './';
+    }
+}
 
 function showLoading(text) {
     document.getElementById('loading-text').textContent = text || '正在保存...';
