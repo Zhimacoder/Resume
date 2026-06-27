@@ -21,7 +21,7 @@ services:
 networks:
   football-network:
     external: true
-    name: football-edge_zhima-soccer-network
+    name: zhima-soccer_zhima-soccer-network
 
 volumes:
   resume-config:

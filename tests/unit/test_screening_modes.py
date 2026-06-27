@@ -65,7 +65,7 @@ class TestConfigStatusLocalMode:
 class TestConfigPostProductionMode:
     def test_post_returns_403(self, client_factory):
         client = client_factory(True)
-        resp = client.post('/api/config', json={'current_model': 'doubao', 'models': {}})
+        resp = client.post('/api/config', json={'current_model': 'deepseek', 'models': {}})
         assert resp.status_code == 403
 
 
@@ -97,16 +97,16 @@ class TestScreeningProductionMode:
                 data={
                     'jd_content': 'JD 示例',
                     'api_key': 'fake-key',
-                    'model_type': 'doubao',
-                    'model_endpoint': 'https://ark.cn-beijing.volces.com/api/v3/chat/completions',
-                    'model_name': 'doubao-pro-32k-240928',
+                    'model_type': 'deepseek',
+                    'model_endpoint': 'https://api.deepseek.com/chat/completions',
+                    'model_name': 'deepseek-chat',
                 },
                 files={'files': ('resume.txt', f, 'text/plain')}
             )
         assert resp.status_code == 200
         data = resp.json()
         assert data['success'] is True
-        assert data['model_used'] == 'doubao'
+        assert data['model_used'] == 'deepseek'
         # 真实 LLM 调用会失败，errors 里应该有内容
         assert isinstance(data.get('errors', []), list)
 

@@ -148,10 +148,10 @@ async def api_test_connection(payload: Dict[str, Any]):
 
     请求体：
     {
-        "model_type": "doubao",
+        "model_type": "deepseek",
         "api_key": "xxx",
-        "endpoint": "https://...",
-        "model_name": "doubao-pro-32k"  // 可选
+        "endpoint": "https://api.deepseek.com/chat/completions",
+        "model_name": "deepseek-chat"  // 自定义模型时必填
     }
     """
     model_type = payload.get("model_type", "")

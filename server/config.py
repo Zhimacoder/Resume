@@ -16,44 +16,8 @@ CONFIG_FILE = CONFIG_DIR / "models.json.enc"
 CONFIG_KEY_DIR = Path.home() / ".config" / "resume_screening"
 CONFIG_KEY_FILE = CONFIG_KEY_DIR / ".key"
 
-# 默认模型配置
+# 默认模型配置（本地模式）
 DEFAULT_MODELS = {
-    "doubao": {
-        "model_name": "字节豆包",
-        "api_key": "",
-        "endpoint": "https://ark.cn-beijing.volces.com/api/v3/chat/completions",
-        "model_version": "",
-        "is_valid": False
-    },
-    "wenxin": {
-        "model_name": "百度文心",
-        "api_key": "",
-        "api_secret": "",
-        "endpoint": "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/completions",
-        "model_version": "",
-        "is_valid": False
-    },
-    "qianwen": {
-        "model_name": "阿里千问",
-        "api_key": "",
-        "endpoint": "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions",
-        "model_version": "",
-        "is_valid": False
-    },
-    "zhipu": {
-        "model_name": "智谱GLM",
-        "api_key": "",
-        "endpoint": "https://open.bigmodel.cn/api/paas/v4/chat/completions",
-        "model_version": "",
-        "is_valid": False
-    },
-    "minmax": {
-        "model_name": "MinMax",
-        "api_key": "",
-        "endpoint": "https://api.minimax.chat/v1/text/chatcompletion_v2",
-        "model_version": "",
-        "is_valid": False
-    },
     "deepseek": {
         "model_name": "DeepSeek",
         "api_key": "",
@@ -124,10 +88,6 @@ def _is_model_config_valid(model_key: str, model_config: Dict[str, Any]) -> bool
     endpoint = model_config.get("endpoint", "")
     if not api_key or not endpoint:
         return False
-    if model_key == "wenxin":
-        api_secret = model_config.get("api_secret", "")
-        if not api_secret:
-            return False
     return True
 
 
@@ -240,7 +200,5 @@ def _mask_secret(secret: str) -> str:
 def validate_model_config(model_key: str, api_key: str, endpoint: str, api_secret: str = "") -> bool:
     """验证模型配置是否有效"""
     if not api_key or not endpoint:
-        return False
-    if model_key == "wenxin" and not api_secret:
         return False
     return True

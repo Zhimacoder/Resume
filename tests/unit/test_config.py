@@ -15,28 +15,28 @@ from config import (
 
 
 class TestIsModelConfigValid:
-    def test_doubao_valid(self):
-        assert _is_model_config_valid("doubao", {"api_key": "xxx", "endpoint": "yyy"}) is True
+    def test_deepseek_valid(self):
+        assert _is_model_config_valid("deepseek", {"api_key": "xxx", "endpoint": "yyy"}) is True
 
-    def test_doubao_missing_key(self):
-        assert _is_model_config_valid("doubao", {"api_key": "", "endpoint": "yyy"}) is False
+    def test_deepseek_missing_key(self):
+        assert _is_model_config_valid("deepseek", {"api_key": "", "endpoint": "yyy"}) is False
 
-    def test_doubao_missing_endpoint(self):
-        assert _is_model_config_valid("doubao", {"api_key": "xxx", "endpoint": ""}) is False
+    def test_deepseek_missing_endpoint(self):
+        assert _is_model_config_valid("deepseek", {"api_key": "xxx", "endpoint": ""}) is False
 
-    def test_wenxin_valid(self):
-        assert _is_model_config_valid("wenxin", {
-            "api_key": "ak", "endpoint": "ep", "api_secret": "sk"
+    def test_custom_valid(self):
+        assert _is_model_config_valid("custom", {
+            "api_key": "ak", "endpoint": "ep", "model_name": "my-model"
         }) is True
 
-    def test_wenxin_missing_secret(self):
-        assert _is_model_config_valid("wenxin", {
-            "api_key": "ak", "endpoint": "ep"
+    def test_custom_missing_key(self):
+        assert _is_model_config_valid("custom", {
+            "api_key": "", "endpoint": "ep"
         }) is False
 
-    def test_wenxin_empty_secret(self):
-        assert _is_model_config_valid("wenxin", {
-            "api_key": "ak", "endpoint": "ep", "api_secret": ""
+    def test_custom_missing_endpoint(self):
+        assert _is_model_config_valid("custom", {
+            "api_key": "ak", "endpoint": ""
         }) is False
 
 
