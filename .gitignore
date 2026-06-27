@@ -59,3 +59,10 @@ deploy/scripts/deploy.sh
 
 # ── 测试报告 ──────────────────────────────────────────────────
 tests/reports/
+
+# ── 网易 Popo IM 临时文件 ───────────────────────────────────
+.popoproject/
+.popocache/
+.popo.json
+*_popo.html
+popo*.html
