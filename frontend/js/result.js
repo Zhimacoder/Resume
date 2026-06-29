@@ -69,13 +69,30 @@ function renderResultList() {
         const score = item.score || 0;
         const scoreClass = score >= 75 ? 'score-high' : score >= 50 ? 'score-mid' : 'score-low';
         const ageTag = buildAgeTag(item.age_info);
+        
+        const matchCount = (item.matching_points || []).length;
+        const shortCount = (item.shortcomings || []).length;
+        let summaryText = item.summary || '暂无概述';
+        if (summaryText.length > 60) {
+            summaryText = summaryText.substring(0, 60) + '...';
+        }
+        
         return `
         <div class="result-item ${index === currentIndex ? 'active' : ''}" data-index="${index}">
-            <div class="name-row">
-                <span class="name">📄 ${item.resume_name}</span>
-                ${ageTag}
+            <div class="item-main">
+                <div class="name-row">
+                    <span class="name" title="${item.resume_name}">📄 ${item.resume_name}</span>
+                    ${ageTag}
+                </div>
+                <div class="item-desc" title="${item.summary || '暂无概述'}">${summaryText}</div>
+                <div class="item-tags">
+                    <span class="mini-tag tag-match">✓ 匹配 ${matchCount}</span>
+                    <span class="mini-tag tag-gap">! 不足 ${shortCount}</span>
+                </div>
             </div>
-            <div class="score ${scoreClass}">${score}分</div>
+            <div class="item-score-wrap">
+                <div class="score ${scoreClass}">${score}分</div>
+            </div>
         </div>`;
     }).join('');
 
